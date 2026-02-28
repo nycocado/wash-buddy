@@ -1,6 +1,6 @@
 # Wash Buddy
 
-O Wash Buddy é um brinquedo de banho inteligente projetado para incentivar e melhorar os hábitos de higiene das mãos para crianças por meio de interação física e feedback háptico. Ao detetar pressão e movimento, o dispositivo fornece feedback em tempo real para garantir uma experiência de lavagem das mãos ou do banho adequada e envolvente.
+O Wash Buddy é um brinquedo inteligente projetado para incentivar e melhorar os hábitos de higiene das mãos para crianças por meio de interação física e feedback háptico. Ao detetar pressão e movimento, o dispositivo fornece feedback em tempo real para garantir uma experiência de lavagem das mãos ou do banho adequada e envolvente.
 
 ## Visão Geral
 
