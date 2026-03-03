@@ -6,7 +6,6 @@ constexpr uint8_t MOTOR_PIN = 9;
 constexpr uint8_t DT_PIN = 2;
 constexpr uint8_t SDA_PIN = 3;
 constexpr uint8_t SCL_PIN = 4;
-constexpr uint8_t INT_PIN = 10;
 
 class VibrationMotor {
     private:
@@ -36,10 +35,12 @@ class IMUSensor {
             : _sdaPin(sdaPin), _sclPin(sclPin) {}
         
         bool begin() {
-            Wire.begin(_sdaPin, _sclPin);
+            Wire.setPins(_sdaPin, _sclPin);
+            
+            Wire.begin();
         
             if (!_mpu.begin()) {
-            return false;
+                return false;
             }
         
             _mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
