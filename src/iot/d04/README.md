@@ -6,14 +6,14 @@ O **Wash Buddy** é um companheiro robótico interativo concebido para incentiva
 
 O projeto original foi completamente reformulado para se focar numa experiência tátil e "standalone" (sem a necessidade de smartphones parentais ou conectividade Bluetooth para a sua operação base). O robô agora reage nativamente a *Tags* RFID, exibindo feedback emocional num ecrã OLED e movendo os seus braços e cabeça para interagir com o utilizador de forma síncrona com os ciclos de lavagem. O sistema de deteção por Strain Gauges e Giroscópio (MPU-6050) foi arquivado a favor de uma arquitetura mecânica direta (Servos) e de aproximação por rádio frequência.
 
-O código foi reescrito sob uma arquitetura de C++ moderno, orientado a objetos, assente num padrão de *Managers* fortemente tipados e altamente otimizados para microcontroladores.
+O código foi reescrito sob uma arquitetura de C++ moderno, orientado a objetos, assente num padrão de motores e controladores fortemente tipados e altamente otimizados para microcontroladores.
 
 ## Funcionalidades Principais
 
-* **Feedback Visual e Emocional (OLED):** Um ecrã OLED de 128x64 exibe expressões faciais fluidas a 50 FPS (via biblioteca *RoboEyes*) em conjunto com um avançado motor de partículas *customizado* que sobrepõe efeitos climáticos e físicos (chuva, bolhas de sabão dinâmicas, correntes de ar onduladas e confetes festivos rotativos em 3D) dependendo do estado atual da máquina de estados.
-* **Movimento Físico Suavizado:** Três servomotores controlam os braços e a cabeça do robô. Em vez de deslocações abruptas, os movimentos utilizam algoritmos de *easing* logarítmico (suavização) calculados através de *Delta Time* (física independente da taxa de *frames*), tornando o robô orgânico e muito mais natural aos olhos de uma criança.
-* **Interação Tátil por RFID:** O sistema utiliza um módulo leitor MFRC522. A criança interage aproximando diferentes "fichas" (ex: Cartões ou porta-chaves encapsulados em formas de objetos de banho) que acionam estados ou comandos específicos do robô.
-* **Gestão de Estados (State Machine):** Um controlador principal orquestra as ações entre os *Managers* mapeando um ciclo lógico estrito: `WET` (Molhar) -> `SOAP` (Ensaboar) -> `SCRUB` (Esfregar) -> `RINSE` (Enxaguar) -> `DRY` (Secar) -> `SUCCESS` (Sucesso).
+* **Feedback Visual e Emocional (OLED):** Um ecrã OLED de 128x64 exibe expressões faciais fluidas a 50 FPS (via motor `ExpressionEngine`) em conjunto com um avançado motor de partículas *customizado* (`ParticleSystem`) que sobrepõe efeitos climáticos e físicos (chuva, bolhas de sabão dinâmicas, correntes de ar onduladas e confetes festivos rotativos em 3D) dependendo do estado atual da máquina de estados.
+* **Movimento Físico Suavizado:** Três servomotores controlam os braços e a cabeça do robô através do `MotionController`. Em vez de deslocações abruptas, os movimentos utilizam algoritmos de *easing* logarítmico (suavização) calculados através de *Delta Time* (física independente da taxa de *frames*), tornando o robô orgânico e muito mais natural aos olhos de uma criança.
+* **Interação Tátil por RFID:** O sistema utiliza um módulo leitor MFRC522 gerido pelo `RFIDReader`. A criança interage aproximando diferentes "fichas" (ex: Cartões ou porta-chaves encapsulados em formas de objetos de banho) que acionam estados ou comandos específicos do robô.
+* **Gestão de Estados (State Machine):** Um controlador principal (`GameController`) orquestra as ações entre os motores e controladores mapeando um ciclo lógico estrito: `WET` (Molhar) -> `SOAP` (Ensaboar) -> `SCRUB` (Esfregar) -> `RINSE` (Enxaguar) -> `DRY` (Secar) -> `SUCCESS` (Sucesso).
 
 ## Arquitetura de Hardware
 
@@ -33,10 +33,11 @@ O projeto usa **PlatformIO** em vez do clássico Arduino IDE. O *core* foi desen
 
 Os subsistemas foram divididos nas seguintes bibliotecas dedicadas:
 
-* `DisplayManager`: Atua como uma classe *Facade* que esconde e orquestra a complexidade visual, misturando num único buffer os humores dos olhos do robô (`EyeMood`) com o sistema dinâmico de partículas, desenhando também ícones Sprite quando necessário.
-* `MotionManager`: Lida com a interpolação matemática dos motores. Garante que os atuadores nunca excedem os limites angulares definidos por segurança e transitam de forma natural para os *targets*.
-* `ParticleManager`: Um motor de física leve, *polimórfico*, que gere o ciclo de vida (nascimento, física e eliminação de memória) de elementos herdados de uma interface base (`BubbleParticle`, `RainParticle`, `WindParticle` e `ConfettiParticle`).
-* `RFIDManager`: Isolador do hardware SPI e da complexidade da biblioteca `MFRC522`, abstraindo o processo a simples deteções booleanas e leituras de UID limpas.
+* `DisplayOrchestrator`: Atua como uma classe *Facade* que esconde e orquestra a complexidade visual, sincronizando o motor de expressões com o sistema de partículas.
+* `MotionController`: Controlador físico que lida com a interpolação matemática dos motores, garantindo movimentos naturais e seguros dentro dos limites angulares.
+* `ParticleSystem`: Um motor de física leve e polimórfico que gere o ciclo de vida de efeitos visuais (Bolhas, Chuva, Vento e Confetes).
+* `ExpressionEngine`: Motor de renderização e comportamento que dá "vida" ao robô, controlando emoções, piscadas e a direção do olhar.
+* `RFIDReader`: Isolador do hardware SPI que abstrai a complexidade do sensor MFRC522 para detecções simples de cartões e leitura de UIDs.
 
 ## Estrutura Atualizada do Repositório
 
@@ -46,7 +47,7 @@ Os subsistemas foram divididos nas seguintes bibliotecas dedicadas:
 │   └── iot/
 │       └── d04/             # Diretório Raiz do Firmware Atual (Projeto PlatformIO)
 │           ├── include/     # Cabeçalhos globais e enumerações semânticas (ex: RobotState.h)
-│           ├── lib/         # Módulos principais do robô (Managers)
+│           ├── lib/         # Motores e Controladores (ex: ParticleSystem, MotionController)
 │           ├── src/         # Orquestrador Central (main.cpp e GameController)
 │           ├── platformio.ini # Configurações de compilação, otimização (LTO/O3) e dependências
 │           └── diagram.json   # Ficheiro de cablagem do simulador Wokwi
