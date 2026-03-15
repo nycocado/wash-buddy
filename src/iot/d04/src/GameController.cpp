@@ -1,208 +1,221 @@
 #include "GameController.h"
-#include "DisplayManager.h"
-#include "MotionManager.h"
-#include "RFIDManager.h"
+#include "states/BootState.h"
+#include "states/DryState.h"
+#include "states/ErrorState.h"
+#include "states/IdleState.h"
+#include "states/RinseState.h"
+#include "states/ScrubState.h"
+#include "states/SleepState.h"
+#include "states/SoapState.h"
+#include "states/SuccessState.h"
+#include "states/WaitingState.h"
+#include "states/WetState.h"
 
 GameController::GameController(
-    DisplayManager& display,
-    MotionManager& motion,
-    RFIDManager& rfid
+    DisplayOrchestrator& display,
+    MotionController& motion,
+    RFIDReader& rfid
 )
-    : _display(display), _motion(motion), _rfid(rfid),
-      _currentState(RobotState::BOOT), _stateStartTime(0)
+    : _display(display), _motion(motion), _rfid(rfid), _currentState(nullptr),
+      _previousState(nullptr), _lastRitualState(RobotState::BOOT),
+      _stateStartTime(0), _repeatCount(0)
 {
+    // Alocação estática dos estados para evitar fragmentação de memória durante
+    // o ritual
+    initializeStates();
+}
+
+void GameController::initializeStates()
+{
+    _states[static_cast<int>(RobotState::BOOT)] = new BootState();
+    _states[static_cast<int>(RobotState::IDLE)] = new IdleState();
+    _states[static_cast<int>(RobotState::WET)] = new WetState();
+    _states[static_cast<int>(RobotState::SOAP)] = new SoapState();
+    _states[static_cast<int>(RobotState::SCRUB)] = new ScrubState();
+    _states[static_cast<int>(RobotState::RINSE)] = new RinseState();
+    _states[static_cast<int>(RobotState::DRY)] = new DryState();
+    _states[static_cast<int>(RobotState::SUCCESS)] = new SuccessState();
+    _states[static_cast<int>(RobotState::ERROR)] = new ErrorState();
+    _states[static_cast<int>(RobotState::WAITING)] = new WaitingState();
+    _states[static_cast<int>(RobotState::SLEEP)] = new SleepState();
 }
 
 void GameController::init()
 {
-    // O robô acabou de ligar. Começa no estado BOOT.
+    // Inicia a FSM no estado de Boot
     changeState(RobotState::BOOT);
 }
 
 void GameController::update()
 {
-    // 1. OUVIR O MUNDO: Verifica se a criança passou algum cartão novo
+    // Hardware: Polling do Leitor RFID
     if (_rfid.isCardPresent())
     {
         String uid = _rfid.readCardUID();
         if (uid.length() > 0)
         {
-            Serial.print("[GameController] Cartão detetado: ");
+            Serial.print(F("[GameController] Tag Detectada: "));
             Serial.println(uid);
-            processRFIDTag(uid);
+
+            // Delega o tratamento da tag para o estado atual (Strategy Pattern)
+            if (_currentState)
+            {
+                _currentState->handleRFID(this, uid);
+            }
         }
     }
 
-    // 2. PENSAR: O que o robô deve fazer dependendo do estado atual?
-    // TODO: A sua equipa deve expandir este switch com os tempos de cada estado!
-    switch (_currentState)
+    // Ciclo de vida: Atualização lógica do estado atual
+    if (_currentState)
     {
-        case RobotState::BOOT:
-            // Passados 3 segundos no BOOT, vai para o IDLE esperar uma criança
-            if (millis() - _stateStartTime > 3000)
-            {
-                changeState(RobotState::IDLE);
-            }
-            break;
-
-        case RobotState::IDLE:
-            handleIdleState();
-            break;
-
-        case RobotState::WET:
-        case RobotState::SOAP:
-        case RobotState::SCRUB:
-        case RobotState::RINSE:
-        case RobotState::DRY:
-            handleWashingState();
-            break;
-
-        case RobotState::SUCCESS:
-            // Celebra por 5 segundos e volta ao IDLE
-            if (millis() - _stateStartTime > 5000)
-            {
-                changeState(RobotState::IDLE);
-            }
-            break;
-
-        case RobotState::ERROR:
-            // Fica zangado por 4 segundos e volta ao IDLE
-            if (millis() - _stateStartTime > 4000)
-            {
-                changeState(RobotState::IDLE);
-            }
-            break;
+        _currentState->update(this);
     }
 }
 
-void GameController::changeState(RobotState newState)
+void GameController::changeState(RobotState stateEnum)
 {
-    if (_currentState == newState)
-        return; // Não faz nada se tentar mudar para o mesmo estado
+    // Regra de Negócio: Gerenciamento de Repetições do Ritual
+    // O objetivo é garantir que a criança siga a ordem, mas permitir uma
+    // correção (repetição)
+    if (isRitualState(stateEnum))
+    {
+        if (stateEnum != _lastRitualState)
+        {
+            // Se mudou para um NOVO estado do ritual, reseta o contador de
+            // repetições
+            resetRitualProgress();
+            _lastRitualState = stateEnum;
+        }
+        else
+        {
+            // Se tentou entrar no MESMO estado ritualístico (ex: leu a tag de
+            // sabão duas vezes)
+            _repeatCount++;
 
+            // Limite Pedagógico: Se repetir mais de uma vez a mesma etapa,
+            // dispara erro. Isso evita que a criança fique "brincando" apenas
+            // com uma etapa.
+            if (_repeatCount > 1)
+            {
+                Serial.println(
+                    F("[GameController] Erro: Limite de repeticao excedido.")
+                );
+                stateEnum = RobotState::ERROR;
+            }
+        }
+    }
+    // Estados neutros ou finais resetam o progresso para um novo ciclo
+    else if (stateEnum == RobotState::IDLE || stateEnum == RobotState::BOOT || stateEnum == RobotState::SUCCESS)
+    {
+        resetRitualProgress();
+    }
+
+    // Busca a instância do estado no pool e realiza a transição
+    int index = static_cast<int>(stateEnum);
+    changeState(_states[index]);
+}
+
+void GameController::changeState(State* newState)
+{
+    // Evita transições redundantes (exceto para estados rituais que permitem
+    // repetição controlada)
+    if (_currentState == newState && !isRitualState(newState->getStateEnum()))
+        return;
+
+    // Ciclo de vida: Saída do estado anterior
+    if (_currentState != nullptr)
+    {
+        _currentState->exit(this);
+        _previousState = _currentState;
+    }
+
+    // Configuração do novo estado
     _currentState = newState;
     _stateStartTime = millis();
 
-    Serial.print("[GameController] Mudou de estado para: ");
-    Serial.println(static_cast<int>(newState));
+    // Log de depuração da transição
+    Serial.print(F("[FSM Transition] -> "));
+    Serial.print(getStateName(_currentState->getStateEnum()));
+    if (isRitualState(_currentState->getStateEnum()))
+    {
+        Serial.print(F(" (Tentativa: "));
+        Serial.print(_repeatCount + 1);
+        Serial.print(F(")"));
+    }
+    Serial.println();
 
-    // AQUI É ONDE O HARDWARE REAGE IMEDIATAMENTE À MUDANÇA!
-    switch (newState)
+    // Reset de Hardware/Visual: Garante que o novo estado comece com "folha
+    // limpa"
+    _display.setEyeMood(eEmotions::Normal);
+    _display.lookAt(0.0f, 0.0f);
+    _display.setParticleEffect(EffectType::NONE);
+    _motion.stopAllAnimations();
+
+    // Ciclo de vida: Entrada no novo estado
+    if (_currentState != nullptr)
+    {
+        _currentState->enter(this);
+    }
+}
+
+void GameController::resetRitualProgress()
+{
+    _repeatCount = 0;
+    _lastRitualState = RobotState::BOOT;
+}
+
+const char* GameController::getStateName(RobotState state) const
+{
+    switch (state)
     {
         case RobotState::BOOT:
-            _display.setEyeMood(EyeMood::DEFAULT);
-            _display.setParticleEffect(EffectType::NONE);
-            _motion.centerAll();
-            break;
-
+            return "BOOT";
         case RobotState::IDLE:
-            _display.setEyeMood(EyeMood::DEFAULT);
-            _display.setEyeIdleMode(true);
-            _display.setParticleEffect(EffectType::NONE);
-            _motion.lookLeft();
-            _motion.moveArmL(120);
-            break;
-
+            return "IDLE";
         case RobotState::WET:
-            _display.setEyeMood(EyeMood::TIRED);
-            _display.setParticleEffect(EffectType::RAIN_LIGHT);
-            _motion.lookRight();
-            _motion.moveArmR(60);
-            break;
-
+            return "WET";
         case RobotState::SOAP:
-            _display.lookAt(EyePosition::N);
-            _display.setParticleEffect(EffectType::BUBBLES);
-            _motion.centerAll();
-            break;
-
+            return "SOAP";
         case RobotState::SCRUB:
-            _display.setEyeMood(EyeMood::HAPPY);
-            _display.setParticleEffect(EffectType::BUBBLES);
-            _motion.moveArmL(160, 20.0f);
-            _motion.moveArmR(20, 20.0f);
-            break;
-
+            return "SCRUB";
         case RobotState::RINSE:
-            _display.lookAt(EyePosition::S);
-            _display.setParticleEffect(EffectType::RAIN_HEAVY);
-            _motion.centerAll();
-            break;
-
+            return "RINSE";
         case RobotState::DRY:
-            _display.setEyeMood(EyeMood::TIRED);
-            _display.setParticleEffect(EffectType::WIND);
-            _motion.lookLeft();
-            break;
-
+            return "DRY";
         case RobotState::SUCCESS:
-            _display.playHappy();
-            _display.setParticleEffect(EffectType::CONFETTI);
-            _motion.waveHands();
-            break;
-
+            return "SUCCESS";
         case RobotState::ERROR:
-            _display.setEyeMood(EyeMood::ANGRY);
-            _display.playConfused();
-            _display.setParticleEffect(EffectType::NONE);
-            _motion.moveHead(60, 30.0f);
-            _motion.moveArmL(180, 20.0f);
-            break;
+            return "ERROR";
+        case RobotState::WAITING:
+            return "WAITING";
+        case RobotState::SLEEP:
+            return "SLEEP";
+        default:
+            return "UNKNOWN";
     }
 }
 
-void GameController::processRFIDTag(const String& uid)
+bool GameController::isRitualState(RobotState state) const
 {
-    // TODO: Adicione aqui os UIDs dos vossos cartões reais!
-    // Exemplo:
-    if (uid == "01:02:03:04") 
-    {
-        // Se for o cartão "01:02:03:04", começa a lavagem (vai para WET)
-        changeState(RobotState::WET);
-    }
-    else if (uid == "11:22:33:44")
-    {
-    }
-    else if (uid == "55:66:77:88")
-    {
-    }
-    else if (uid == "AA:BB:CC:DD")
-    {
-    }
+    // Define quais estados compõem a jornada pedagógica de lavagem das mãos
+    return (
+        state == RobotState::WET || state == RobotState::SOAP ||
+        state == RobotState::SCRUB || state == RobotState::RINSE ||
+        state == RobotState::DRY
+    );
 }
 
-void GameController::handleIdleState()
+void GameController::handleRepeat()
 {
-    // TODO: No estado IDLE, o robô está à espera de um cartão.
-    // Pode querer fazer uma animação de "chamar a atenção" se passar muito tempo.
-    // unsigned long timeInIdle = millis() - _stateStartTime;
-    // if(timeInIdle > 10000) { _motion.waveHands(); }
+    // Aciona a transição para o último estado ritualístico registrado.
+    // A lógica de contagem e erro será processada dentro do
+    // changeState(RobotState).
+    changeState(_lastRitualState);
 }
 
-void GameController::handleWashingState()
+RobotState GameController::getCurrentStateEnum() const
 {
-    // TODO: Fazer a lógica de transição automática aqui.
-    // Exemplo: WET dura 5s, depois muda sozinho para SOAP.
-    unsigned long elapsedTime = millis() - _stateStartTime;
-
-    if (_currentState == RobotState::WET && elapsedTime > 5000)
-    {
-        changeState(RobotState::SOAP);
-    }
-    else if (_currentState == RobotState::SOAP && elapsedTime > 5000)
-    {
-        changeState(RobotState::SCRUB);
-    }
-    else if (_currentState == RobotState::SCRUB && elapsedTime > 10000)
-    {
-        changeState(RobotState::RINSE);
-    }
-    else if (_currentState == RobotState::RINSE && elapsedTime > 5000)
-    {
-        changeState(RobotState::DRY);
-    }
-    else if (_currentState == RobotState::DRY && elapsedTime > 5000)
-    {
-        changeState(RobotState::SUCCESS);
-    }
+    if (_currentState)
+        return _currentState->getStateEnum();
+    return RobotState::BOOT;
 }
