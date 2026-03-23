@@ -11,35 +11,38 @@
  */
 namespace Pins
 {
-/**
- * @brief Pinos para comunicação SPI com o Leitor RFID (MFRC522).
- * O leitor RFID é usado para identificar os objetos (sabão, toalha, etc.) via
- * tags.
- */
-constexpr uint8_t SPI_SCK = 33;  ///< Pino de Clock (SCK)
-constexpr uint8_t SPI_MISO = 26; ///< Pino Master In Slave Out (MISO)
-constexpr uint8_t SPI_MOSI = 25; ///< Pino Master Out Slave In (MOSI)
-constexpr uint8_t RFID_SDA = 32; ///< Pino de Seleção de Escravo (SS/SDA)
-constexpr uint8_t RFID_RST = 27; ///< Pino de Reset do MFRC522
+    /**
+     * @brief Pinos para comunicação SPI com o Leitor RFID (MFRC522).
+     * O leitor RFID é usado para identificar os objetos (sabão, toalha, etc.)
+     * via tags.
+     */
+    constexpr uint8_t SPI_SCK = 33;  ///< Pino de Clock (SCK)
+    constexpr uint8_t SPI_MISO = 26; ///< Pino Master In Slave Out (MISO)
+    constexpr uint8_t SPI_MOSI = 25; ///< Pino Master Out Slave In (MOSI)
+    constexpr uint8_t RFID_SDA = 32; ///< Pino de Seleção de Escravo (SS/SDA)
+    constexpr uint8_t RFID_RST = 27; ///< Pino de Reset do MFRC522
 
-/**
- * @brief Pinos para comunicação I2C com o Display OLED (SSD1306).
- * O display é a principal interface visual, mostrando as expressões do robô.
- */
-constexpr uint8_t OLED_SDA = 17; ///< Pino de Dados I2C
-constexpr uint8_t OLED_SCL = 16; ///< Pino de Clock I2C
+    /**
+     * @brief Pinos para comunicação I2C com o Display OLED (SSD1306).
+     * O display é a principal interface visual, mostrando as expressões do
+     * robô.
+     */
+    constexpr uint8_t OLED_SDA = 17; ///< Pino de Dados I2C
+    constexpr uint8_t OLED_SCL = 16; ///< Pino de Clock I2C
 
-/**
- * @brief Pinos PWM para controle dos Servomotores.
- * Estes servos dão vida ao robô, movendo braços e cabeça para expressar
- * emoções.
- */
-constexpr uint8_t SERVO_ARM_L =
-    13; ///< Braço Esquerdo: Usado para acenar ou gesticular
-constexpr uint8_t SERVO_ARM_R =
-    12; ///< Braço Direito: Usado para acenar ou gesticular
-constexpr uint8_t SERVO_HEAD =
-    4; ///< Movimento da Cabeça: Permite olhar para os lados
+    /**
+     * @brief Pinos PWM para controle dos Servomotores.
+     * Estes servos dão vida ao robô, movendo braços e cabeça para expressar
+     * emoções.
+     */
+    constexpr uint8_t SERVO_ARM_L =
+        13; ///< Braço Esquerdo: Usado para acenar ou gesticular
+    constexpr uint8_t SERVO_ARM_R =
+        14; ///< Braço Direito: Usado para acenar ou gesticular
+    constexpr uint8_t SERVO_HEAD =
+        4; ///< Movimento da Cabeça: Permite olhar para os lados
+    constexpr uint8_t BUTTON_DEBUG =
+        23; ///< Botão para navegação forçada entre estados
 } // namespace Pins
 
 /**
@@ -70,50 +73,98 @@ struct RFIDTags
  */
 namespace GameConfig
 {
-// Timeouts padrão e globais
-constexpr unsigned long STATE_TIMEOUT_DEFAULT =
-    15000; ///< Tempo limite geral para qualquer estado (15s)
-constexpr unsigned long WAITING_TIMEOUT_MS =
-    15000; ///< Tempo máximo que o robô espera pela próxima ação (15s)
-constexpr unsigned long ERROR_DISPLAY_MS =
-    4000; ///< Duração da tela de erro/atenção (4s)
+    // Timeouts padrão e globais
+    constexpr unsigned long STATE_TIMEOUT_DEFAULT =
+        15000; ///< Tempo limite geral para qualquer estado (15s)
+    constexpr unsigned long WAITING_TIMEOUT_MS =
+        15000; ///< Tempo máximo que o robô espera pela próxima ação (15s)
+    constexpr unsigned long ERROR_DISPLAY_MS =
+        4000; ///< Duração da tela de erro/atenção (4s)
 
-// Timeouts específicos por etapa do ritual
-/**
- * @brief Tempo para a etapa de molhar as mãos.
- * Uma preparação rápida para a aplicação do sabão.
- */
-constexpr unsigned long WET_TIMEOUT = 10000;
+    // Timeouts específicos por etapa do ritual
+    /**
+     * @brief Tempo para a etapa de molhar as mãos.
+     * Uma preparação rápida para a aplicação do sabão.
+     */
+    constexpr unsigned long WET_TIMEOUT = 10000;
 
-/**
- * @brief Tempo para a aplicação de sabão.
- * Período destinado a garantir que a criança pegou sabão suficiente.
- */
-constexpr unsigned long SOAP_TIMEOUT = 10000;
+    /**
+     * @brief Tempo para a aplicação de sabão.
+     * Período destinado a garantir que a criança pegou sabão suficiente.
+     */
+    constexpr unsigned long SOAP_TIMEOUT = 10000;
 
-/**
- * @brief Tempo para a etapa de esfregar as mãos.
- * Baseado na recomendação da OMS/CDC de pelo menos 20 segundos para eliminar
- * patógenos.
- */
-constexpr unsigned long SCRUB_TIMEOUT = 25000;
+    /**
+     * @brief Tempo para a etapa de esfregar as mãos.
+     * Baseado na recomendação da OMS/CDC de pelo menos 20 segundos para
+     * eliminar patógenos.
+     */
+    constexpr unsigned long SCRUB_TIMEOUT = 25000;
 
-/**
- * @brief Tempo para o enxágue final.
- * Garante que todo o sabão e sujeira foram removidos.
- */
-constexpr unsigned long RINSE_TIMEOUT = 15000;
+    /**
+     * @brief Tempo para o enxágue final.
+     * Garante que todo o sabão e sujeira foram removidos.
+     */
+    constexpr unsigned long RINSE_TIMEOUT = 15000;
 
-/**
- * @brief Tempo para a secagem das mãos.
- * Etapa final importante para evitar a proliferação de bactérias em mãos
- * úmidas.
- */
-constexpr unsigned long DRY_TIMEOUT = 20000;
+    /**
+     * @brief Tempo para a secagem das mãos.
+     * Etapa final importante para evitar a proliferação de bactérias em mãos
+     * úmidas.
+     */
+    constexpr unsigned long DRY_TIMEOUT = 20000;
 
-/**
- * @brief Duração da comemoração final.
- * Tempo em que o robô exibe alegria pelo sucesso do ritual concluído.
- */
-constexpr unsigned long SUCCESS_DISPLAY = 6000;
+    /**
+     * @brief Duração da comemoração final.
+     * Tempo em que o robô exibe alegria pelo sucesso do ritual concluído.
+     */
+    constexpr unsigned long SUCCESS_DISPLAY = 6000;
+
+    /**
+     * @brief Tempo necessário segurando o botão para entrar/sair do modo Debug.
+     */
+    constexpr unsigned long DEBUG_LONG_PRESS_MS = 1500;
+
+    /**
+     * @brief Tempo mínimo de pressão para considerar um clique válido
+     * (Debounce). Evita que ruídos elétricos disparem múltiplos cliques.
+     */
+    constexpr unsigned long DEBUG_DEBOUNCE_MS = 50;
+
+    /**
+     * @brief Tempo segurando o botão antes de exibir o feedback visual de
+     * "HOLD...".
+     */
+    constexpr unsigned long DEBUG_HOLD_FEEDBACK_MS = 500;
+
+    /**
+     * @brief Tempo que a mensagem "DEBUG OFF" permanece na tela antes de sumir.
+     */
+    constexpr unsigned long DEBUG_MSG_DURATION_MS = 2000;
+
+    // --- COMPORTAMENTO (IDLE & BEHAVIOR) ---
+    constexpr unsigned long IDLE_MIN_PAUSE_MS =
+        8000; ///< Pausa mínima entre ações
+    constexpr unsigned long IDLE_MAX_PAUSE_MS =
+        15000; ///< Pausa máxima entre ações
+    constexpr unsigned long IDLE_REMINDER_INTERVAL_MS =
+        30000; ///< Intervalo entre ícones
+    constexpr unsigned long IDLE_INITIAL_DELAY_MS =
+        5000; ///< Atraso inicial ao entrar no Idle
+    constexpr unsigned long INSTRUCTION_DISPLAY_MS =
+        5000; ///< Tempo do ícone na tela
+
 } // namespace GameConfig
+
+/**
+ * @namespace HardwareConfig
+ * @brief Configurações gerais de hardware e memória.
+ */
+namespace HardwareConfig
+{
+    /**
+     * @brief Tamanho máximo (em bytes) do buffer para leitura e filas de UID do
+     * RFID.
+     */
+    constexpr size_t RFID_BUFFER_SIZE = 32;
+} // namespace HardwareConfig

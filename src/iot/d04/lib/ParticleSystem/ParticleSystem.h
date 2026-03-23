@@ -49,45 +49,77 @@ class ParticleSystem
         /**
          * @brief Construtor do sistema de partículas.
          * @param display Referência para a instância da U8g2.
-         * @param config Definições globais de limites e área.
+         * @param config Definições globais de limites e área de renderização.
          */
         ParticleSystem(
             U8G2& display,
             const ParticleSystemConfig& config = ParticleSystemConfig()
         );
+
+        /**
+         * @brief Destrutor para limpeza de memória das partículas ativas.
+         */
         ~ParticleSystem();
 
         /**
          * @brief Altera o efeito atmosférico atual.
-         * @param type Novo tipo de efeito.
+         * @param type Novo tipo de efeito do enum EffectType (ex: BUBBLES,
+         * RAIN).
          */
         void setEffect(EffectType type);
 
         /**
-         * @brief Atualiza a física de todas as partículas ativas.
-         * @param deltaTime Tempo decorrido desde o último quadro (s).
+         * @brief Atualiza a física e o ciclo de vida de todas as partículas.
+         * Gerencia o nascimento de novas partículas e a morte das expiradas.
+         * @param deltaTime Tempo decorrido desde o último quadro (em segundos).
          */
         void update(float deltaTime);
 
         /**
-         * @brief Renderiza todas as partículas no buffer da U8g2.
+         * @brief Renderiza todas as partículas ativas no buffer da U8g2.
+         * Deve ser chamado dentro do ciclo de desenho do display.
          */
         void draw();
 
-        // Acesso às configurações específicas de cada efeito
+        /**
+         * @brief Obtém as configurações específicas para o efeito de Bolhas.
+         * @return Referência para a estrutura BubbleSettings.
+         */
         BubbleSettings& getBubbleSettings() { return _bubbleConfig; }
+
+        /**
+         * @brief Obtém as configurações específicas para o efeito de Chuva.
+         * @return Referência para a estrutura RainSettings.
+         */
         RainSettings& getRainSettings() { return _rainConfig; }
+
+        /**
+         * @brief Obtém as configurações específicas para o efeito de Brilho.
+         * @return Referência para a estrutura SparkleSettings.
+         */
         SparkleSettings& getSparkleConfig() { return _sparkleConfig; }
+
+        /**
+         * @brief Obtém as configurações específicas para o efeito de Confete.
+         * @return Referência para a estrutura ConfettiSettings.
+         */
         ConfettiSettings& getConfettiConfig() { return _confettiConfig; }
+
+        /**
+         * @brief Obtém as configurações específicas para o efeito de Vento.
+         * @return Referência para a estrutura WindSettings.
+         */
         WindSettings& getWindSettings() { return _windConfig; }
 
         /**
-         * @brief Define a chance de spawn de novas partículas.
+         * @brief Define dinamicamente a chance de spawn de novas partículas.
+         * @param chance Probabilidade de 0 a 100.
          */
         void setSpawnChance(int chance) { _config.spawnChance = chance; }
 
         /**
-         * @brief Define o limite máximo de partículas.
+         * @brief Define dinamicamente o limite máximo de partículas vivas.
+         * @param max Quantidade máxima (limitada pelo MAX_PARTICLES interno).
          */
         void setMaxParticles(int max)
         {

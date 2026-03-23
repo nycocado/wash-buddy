@@ -2,6 +2,8 @@
 #include "ChoreographyLibrary.h"
 #include "GameController.h"
 
+/** @section Ciclo de Vida */
+
 void ErrorState::enter(GameController* controller)
 {
     // Feedback visual: Humor cético e animação de "hã?" no display
@@ -14,9 +16,13 @@ void ErrorState::enter(GameController* controller)
     );
 
     // Feedback físico: Levanta os braços em sinal de "não entendi"
-    controller->getMotion().moveArmL(45, 15.0f);
-    controller->getMotion().moveArmR(45, 15.0f);
+    controller->getMotion().moveArmL(120, 15.0f);
+    controller->getMotion().moveArmR(120, 15.0f);
 }
+
+void ErrorState::exit(GameController* controller) {}
+
+/** @section Atualização Lógica */
 
 void ErrorState::update(GameController* controller)
 {
@@ -41,6 +47,6 @@ void ErrorState::update(GameController* controller)
     }
 }
 
-void ErrorState::exit(GameController* controller) {}
+/** @section Tratamento de Eventos */
 
 void ErrorState::handleRFID(GameController* controller, const String& uid) {}

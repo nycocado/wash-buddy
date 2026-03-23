@@ -1,71 +1,79 @@
 #include "states/WaitingState.h"
 #include "ChoreographyLibrary.h"
 #include "GameController.h"
+#include "assets/Images.h"
+
+// Pools de Comportamento para o estado de Espera
+static const std::vector<BehaviorVignette> WAITING_WORRIED_POOL = {
+    // Procura para a direita
+    {eEmotions::Worried, 0.7f, 0.0f, ChoreographyLibrary::lookSide(120), 3000},
+    // Procura para a esquerda
+    {eEmotions::Worried, -0.7f, 0.0f, ChoreographyLibrary::lookSide(60), 3000},
+    // Foca na frente
+    {eEmotions::Worried, 0.0f, 0.0f, ChoreographyLibrary::idlePanLook(), 2000}};
+
+static const std::vector<BehaviorVignette> WAITING_SAD_POOL = {
+    // Triste olhando para baixo
+    {eEmotions::Sad, 0.0f, -0.5f, ChoreographyLibrary::lookSide(90), 4000},
+    // Triste olhando um pouco para o lado
+    {eEmotions::Sad, 0.3f, -0.3f, ChoreographyLibrary::lookSide(100), 4000}};
+
+/** @section Ciclo de Vida */
 
 void WaitingState::enter(GameController* controller)
 {
-    // Começa com expressão de preocupação leve
-    controller->getDisplay().setEyeMood(eEmotions::Worried);
-    _nextActionTime = millis() + 1000;
     _isSadPhase = false;
+
+    // Inicia com o comportamento de procuração/preocupação
+    controller->getBehaviors().setPool(WAITING_WORRIED_POOL);
+
+    // Determina qual ícone de instrução mostrar baseado no progresso
+    RobotState lastRitual = controller->getLastRitualState();
+    const uint8_t* nextIcon = nullptr;
+
+    if (lastRitual == RobotState::WET)
+        nextIcon = Assets::ICON_SOAP;
+    else if (lastRitual == RobotState::SOAP)
+        nextIcon = Assets::ICON_SCRUB;
+    else if (lastRitual == RobotState::SCRUB)
+        nextIcon = Assets::ICON_RINSE;
+    else if (lastRitual == RobotState::RINSE)
+        nextIcon = Assets::ICON_TOWEL;
+
+    if (nextIcon != nullptr)
+    {
+        controller->getDisplay().showInstruction(nextIcon, 5000);
+    }
 }
+
+void WaitingState::exit(GameController* controller)
+{
+    controller->getBehaviors().stop();
+}
+
+/** @section Atualização Lógica */
 
 void WaitingState::update(GameController* controller)
 {
-    MotionController& motion = controller->getMotion();
-    DisplayOrchestrator& display = controller->getDisplay();
     unsigned long elapsed = millis() - controller->getStateStartTime();
 
-    // Mantém movimento sutil de respiração nos braços se não houver animação
-    // ativa
-    if (!motion.isArmLAnimActive() && !motion.isArmRAnimActive())
-    {
-        float breatheOffset = (sin(millis() / 400.0f) + 1.0f) * 4.0f;
-        motion.moveArmL(breatheOffset, 1.0f);
-        motion.moveArmR(breatheOffset, 1.0f);
-    }
-
-    // Timeout: Se passar do tempo limite (15s), volta para o IDLE (ritual
-    // abandonado)
+    // Timeout: Se passar do tempo limite (15s), volta para o IDLE
     if (elapsed > GameConfig::WAITING_TIMEOUT_MS)
     {
         controller->changeState(RobotState::IDLE);
         return;
     }
 
-    // Lógica de evolução da impaciência
-    if (millis() > _nextActionTime)
+    // Evolução da impaciência via mudança de Pool
+    if (!_isSadPhase && elapsed > 7000)
     {
-        // Se demorar mais de 7 segundos, entra na fase triste (Sad)
-        if (!_isSadPhase && elapsed > 7000)
-        {
-            _isSadPhase = true;
-            display.setEyeMood(eEmotions::Sad);
-            display.lookAt(0.0f, -0.5f); // Olha para baixo tristemente
-            motion.stopAllAnimations();
-            _nextActionTime = millis() + 1000;
-        }
-        else if (!_isSadPhase) // Fase de preocupação (procura pela criança)
-        {
-            float eyeX = random(-70, 71) / 100.0f;
-            display.lookAt(eyeX, 0.0f);
-            int headAngle = (eyeX > 0) ? 120 : 60;
-            motion.playHeadChoreography(
-                ChoreographyLibrary::lookSide(headAngle), 0.0f, false
-            );
-            _nextActionTime = millis() + random(2000, 4000);
-        }
-        else // Fase triste (pede ajuda/continuação)
-        {
-            motion.playArmLChoreography(
-                ChoreographyLibrary::askingForHelp(), 0.0f, false
-            );
-            _nextActionTime = millis() + 4000;
-        }
+        _isSadPhase = true;
+        // Transita a personalidade para triste/desistente
+        controller->getBehaviors().setPool(WAITING_SAD_POOL);
     }
 }
 
-void WaitingState::exit(GameController* controller) {}
+/** @section Tratamento de Eventos */
 
 void WaitingState::handleRFID(GameController* controller, const String& uid)
 {

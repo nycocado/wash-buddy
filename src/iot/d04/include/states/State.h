@@ -23,46 +23,64 @@ class State
 
         /**
          * @brief Método chamado uma única vez quando a FSM entra neste estado.
-         * Usado para configurar animações iniciais, sons ou LEDs.
-         * @param controller Ponteiro para o contexto principal.
+         *
+         * Usado para configurar animações iniciais, sons ou LEDs específicos
+         * desta fase.
+         *
+         * @param controller Ponteiro para o contexto principal
+         * (GameController).
          */
         virtual void enter(GameController* controller) = 0;
 
         /**
          * @brief Método chamado repetidamente a cada ciclo do loop principal.
+         *
          * Usado para verificar timeouts, atualizar animações ou lógica
-         * temporal.
-         * @param controller Ponteiro para o contexto principal.
+         * temporal interna do estado.
+         *
+         * @param controller Ponteiro para o contexto principal
+         * (GameController).
          */
         virtual void update(GameController* controller) = 0;
 
         /**
          * @brief Método chamado uma única vez quando a FSM sai deste estado.
-         * Usado para limpar recursos ou parar animações.
-         * @param controller Ponteiro para o contexto principal.
+         *
+         * Usado para limpar recursos, parar animações ou resetar timers.
+         *
+         * @param controller Ponteiro para o contexto principal
+         * (GameController).
          */
         virtual void exit(GameController* controller) = 0;
 
         /**
          * @brief Processa a detecção de uma tag RFID.
-         * Cada estado decide como reagir a diferentes tags (avançar, repetir ou
-         * erro).
-         * @param controller Ponteiro para o contexto principal.
-         * @param uid Identificador único da tag lida.
+         *
+         * Cada estado decide como reagir a diferentes tags (avançar, repetir
+         * ou disparar erro).
+         *
+         * @param controller Ponteiro para o contexto principal
+         * (GameController).
+         * @param uid Identificador único (String) da tag lida pelo sensor.
          */
         virtual void
         handleRFID(GameController* controller, const String& uid) = 0;
 
         /**
          * @brief Retorna o identificador único (enum) deste estado.
-         * @return RobotState O enum correspondente ao estado.
+         *
+         * @return RobotState O valor da enumeração correspondente ao estado.
          */
         virtual RobotState getStateEnum() const = 0;
 
         /**
          * @brief Retorna o tempo de duração (timeout) permitido para este
-         * estado. Por padrão, utiliza o timeout global definido em GameConfig.
-         * @return unsigned long Tempo em milissegundos.
+         * estado.
+         *
+         * Por padrão, utiliza o timeout global definido em GameConfig. Estados
+         * ritualísticos podem sobrescrever este valor.
+         *
+         * @return unsigned long Tempo limite em milissegundos.
          */
         virtual unsigned long getTimeout() const
         {
@@ -71,9 +89,10 @@ class State
 
     protected:
         /**
-         * @brief Função auxiliar para padronizar a validação de tags RFID entre
-         * os estados. Verifica se a tag lida corresponde à tag atual
-         * (repetição), à próxima tag (avanço) ou se é uma tag inválida (erro).
+         * @brief Função auxiliar para padronizar a validação de tags RFID.
+         *
+         * Verifica se a tag lida corresponde à tag atual (repetição), à
+         * próxima tag (avanço) ou se é uma tag inválida (erro).
          *
          * @param controller Contexto da FSM.
          * @param uid UID da tag lida.

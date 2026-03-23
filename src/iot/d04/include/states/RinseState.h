@@ -15,11 +15,22 @@
 class RinseState : public State
 {
     public:
+        /** @brief Ativa chuva pesada e centraliza motores. */
         void enter(GameController* controller) override;
+
+        /** @brief Transiciona para WAITING após timeout. */
         void update(GameController* controller) override;
+
+        /** @brief Para animações de comportamento. */
         void exit(GameController* controller) override;
+
+        /** @brief Valida tags de torneira (repetir) ou toalha (avançar). */
         void handleRFID(GameController* controller, const String& uid) override;
+
+        /** @brief Retorna RobotState::RINSE. */
         RobotState getStateEnum() const override { return RobotState::RINSE; }
+
+        /** @brief Retorna o tempo configurado para enxágue. */
         unsigned long getTimeout() const override
         {
             return GameConfig::RINSE_TIMEOUT;

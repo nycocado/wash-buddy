@@ -14,9 +14,18 @@
 class ErrorState : public State
 {
     public:
+        /** @brief Inicia humor cético e animação de confusão. */
         void enter(GameController* controller) override;
+
+        /** @brief Retorna ao estado anterior após breve exibição. */
         void update(GameController* controller) override;
+
+        /** @brief Sem ações de saída. */
         void exit(GameController* controller) override;
+
+        /** @brief Ignora tags durante a exibição de erro. */
         void handleRFID(GameController* controller, const String& uid) override;
+
+        /** @brief Retorna RobotState::ERROR. */
         RobotState getStateEnum() const override { return RobotState::ERROR; }
 };

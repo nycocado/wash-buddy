@@ -1,34 +1,44 @@
 #include "states/SoapState.h"
+#include "ChoreographyLibrary.h"
 #include "GameController.h"
+#include "assets/Images.h"
+
+static const std::vector<BehaviorVignette> SOAP_POOL = {
+    {eEmotions::Focused, 0.0f, 1.0f, std::vector<ChoreoStep>(), 3000},
+    {eEmotions::Surprised, 0.3f, 0.8f, std::vector<ChoreoStep>(), 2000},
+    {eEmotions::Happy, -0.3f, 0.8f, std::vector<ChoreoStep>(), 2000}};
+
+/** @section Ciclo de Vida */
 
 void SoapState::enter(GameController* controller)
 {
-    // Feedback visual: Olhar focado e para cima (direção das mãos)
-    controller->getDisplay().setEyeMood(eEmotions::Focused);
-    controller->getDisplay().lookAt(0.0f, 1.0f);
-
-    // Ativa o sistema de partículas com efeito de bolhas
     controller->getDisplay().setParticleEffect(EffectType::BUBBLES);
 
-    // Prepara os motores para o próximo passo (esfregar)
+    // One-Shot: escolhe UMA e executa apenas UMA VEZ
+    controller->getBehaviors().setPool(SOAP_POOL, 0, 0, false);
+
     controller->getMotion().centerAll();
 }
 
+void SoapState::exit(GameController* controller)
+{
+    controller->getBehaviors().stop();
+}
+
+/** @section Atualização Lógica */
+
 void SoapState::update(GameController* controller)
 {
-    // Retorna para WAITING se o tempo limite for atingido sem interação
     if (millis() - controller->getStateStartTime() > getTimeout())
     {
         controller->changeState(RobotState::WAITING);
     }
 }
 
-void SoapState::exit(GameController* controller) {}
+/** @section Tratamento de Eventos */
 
 void SoapState::handleRFID(GameController* controller, const String& uid)
 {
-    // Transição lógica: Sabão -> Esfregar
-    // Valida se o item aproximado é a buchinha/esponja
     validateRFID(
         controller, uid, RFIDTags::SOAP, RFIDTags::SCRUB, RobotState::SCRUB
     );
