@@ -331,7 +331,7 @@ class EyeDrawer
                      rx2 * y <= ry2 * x;
                      y++)
                 {
-                    u8g2.drawHLine(x0 - x, y0 + y, x);
+                    u8g2.drawHLine(x0 - x, y0 + y - 1, x);
                     if (s >= 0)
                     {
                         s += fy2 * (1 - x);

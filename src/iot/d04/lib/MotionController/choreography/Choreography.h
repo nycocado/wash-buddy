@@ -4,50 +4,68 @@
 #include <vector>
 
 /**
- * @brief Representa um "Passo" (Step) de uma coreografia de movimento.
+ * @struct ChoreoStep
+ * @brief Representa um "Passo" (Step) individual dentro de uma sequência de
+ * movimento.
  */
 struct ChoreoStep
 {
-        int targetAngle; ///< Ângulo de destino para o servo
-        float duration;  ///< Quanto tempo (em segundos) o passo deve durar
-        float speed;     ///< Velocidade de interpolação para este passo
+        int targetAngle; ///< Ângulo de destino para o servo (0-180).
+        float duration;  ///< Tempo de permanência/execução deste passo (em
+                         ///< segundos).
+        float speed; ///< Velocidade de interpolação específica para este passo.
 };
 
 /**
  * @class ChoreoSequence
- * @brief Gerenciador de sequências de passos (coreografia) para um único servo.
+ * @brief Motor de execução de sequências de movimentos (coreografias) para um
+ * único eixo.
+ *
+ * Esta classe gerencia o tempo e a transição entre múltiplos ChoreoSteps,
+ * permitindo criar movimentos complexos e repetitivos (loops) ou únicos
+ * (one-shot).
  */
 class ChoreoSequence
 {
     public:
+        /**
+         * @brief Construtor do gerenciador de sequências.
+         */
         ChoreoSequence();
 
         /**
-         * @brief Define a lista de passos da coreografia.
-         * @param steps Vetor de passos.
+         * @brief Define o conjunto de frames/passos que compõem a coreografia.
+         * @param steps Vetor contendo os passos da sequência.
          */
         void setFrames(const std::vector<ChoreoStep>& steps);
 
         /**
-         * @brief Inicia a reprodução da sequência.
-         * @param startDelay Atraso inicial opcional (s).
-         * @param loop Se a coreografia deve repetir indefinidamente.
+         * @brief Inicia a reprodução da coreografia.
+         * @param startDelay Atraso opcional (em segundos) antes de iniciar o
+         * primeiro passo.
+         * @param loop Se true, a sequência reinicia automaticamente ao chegar
+         * no fim.
          */
         void play(float startDelay = 0.0f, bool loop = true);
 
         /**
-         * @brief Para a reprodução imediatamente.
+         * @brief Interrompe a reprodução imediatamente.
          */
         void stop();
 
         /**
-         * @brief Verifica se a coreografia está sendo reproduzida.
+         * @brief Verifica se a coreografia está em execução ativa.
+         * @return True se estiver rodando, False se estiver parada ou no delay
+         * inicial.
          */
         bool isActive() const;
 
         /**
-         * @brief Atualiza o timer da coreografia.
-         * @return O passo atual a ser executado, ou nullptr se nada mudou.
+         * @brief Atualiza o temporizador interno e determina o passo atual.
+         * Deve ser chamado a cada frame do loop principal.
+         * @param deltaTime Tempo decorrido desde o último quadro (segundos).
+         * @return Ponteiro para o ChoreoStep atual se houver mudança de
+         * comando, ou nullptr.
          */
         const ChoreoStep* update(float deltaTime);
 

@@ -11,6 +11,8 @@
 #include "states/WaitingState.h"
 #include "states/WetState.h"
 
+/** @section Ciclo de Vida */
+
 GameController::GameController(
     DisplayOrchestrator& display,
     MotionController& motion,
@@ -23,6 +25,20 @@ GameController::GameController(
     // Alocação estática dos estados para evitar fragmentação de memória durante
     // o ritual
     initializeStates();
+}
+
+GameController::~GameController()
+{
+    // Limpeza de memória: deleta todas as instâncias de estado alocadas via
+    // 'new'
+    for (int i = 0; i < static_cast<int>(RobotState::STATE_COUNT); i++)
+    {
+        if (_states[i] != nullptr)
+        {
+            delete _states[i];
+            _states[i] = nullptr;
+        }
+    }
 }
 
 void GameController::initializeStates()
@@ -46,24 +62,24 @@ void GameController::init()
     changeState(RobotState::BOOT);
 }
 
+/** @section Processamento */
+
 void GameController::update()
 {
-    // Hardware: Polling do Leitor RFID
-    if (_rfid.isCardPresent())
+    // Limpa mensagens temporárias de debug após o tempo expirar
+    if (_debugTextClearTime > 0 && millis() > _debugTextClearTime)
     {
-        String uid = _rfid.readCardUID();
-        if (uid.length() > 0)
-        {
-            Serial.print(F("[GameController] Tag Detectada: "));
-            Serial.println(uid);
-
-            // Delega o tratamento da tag para o estado atual (Strategy Pattern)
-            if (_currentState)
-            {
-                _currentState->handleRFID(this, uid);
-            }
-        }
+        _display.setDebugText("");
+        _debugTextClearTime = 0;
     }
+
+    // Processa a lógica do botão de debug de forma independente
+    processDebugButton();
+
+    // --- MOTOR DE COMPORTAMENTO (VIDA ORGÂNICA) ---
+    // O motor é pausado automaticamente se houver um ícone/instrução na tela
+    _behaviors.setPaused(_display.isInstructionActive());
+    _behaviors.update(_display, _motion);
 
     // Ciclo de vida: Atualização lógica do estado atual
     if (_currentState)
@@ -71,6 +87,156 @@ void GameController::update()
         _currentState->update(this);
     }
 }
+
+void GameController::processDebugButton()
+{
+    bool isPressed = digitalRead(Pins::BUTTON_DEBUG) == HIGH;
+
+    if (isPressed)
+    {
+        if (!_buttonWasPressed)
+        {
+            // Botão acabou de ser pressionado
+            _buttonPressTime = millis();
+            _buttonWasPressed = true;
+            _debugToggleHandled = false;
+        }
+        else if (!_debugToggleHandled)
+        {
+            // O botão continua pressionado
+            unsigned long pressDuration = millis() - _buttonPressTime;
+
+            if (pressDuration >= GameConfig::DEBUG_LONG_PRESS_MS)
+            {
+                // Toggle do Modo Debug acontece imediatamente ao atingir o
+                // tempo
+                _isDebugMode = !_isDebugMode;
+                _debugToggleHandled =
+                    true; // Impede que fique ativando em loop enquanto segura
+
+                if (_isDebugMode)
+                {
+                    Serial.println(F("[DEBUG] Entrando no modo Debug."));
+                    _debugTextClearTime =
+                        0; // Se está em debug, o texto fica fixo (será setado
+                           // na transição de estado)
+
+                    // Força a tela a mostrar que entrou em debug antes da
+                    // transição (que pode ser muito rápida)
+                    _display.setDebugText(
+                        String("DEBUG: ") + getStateName(RobotState::IDLE)
+                    );
+
+                    // Vai para Idle (isso chamará changeState, mas precisamos
+                    // garantir que o texto não fique preso em "HOLD...")
+                    changeState(RobotState::IDLE);
+                }
+                else
+                {
+                    Serial.println(F("[DEBUG] Saindo do modo Debug."));
+                    _display.setDebugText("DEBUG OFF");
+                    _debugTextClearTime =
+                        millis() +
+                        GameConfig::DEBUG_MSG_DURATION_MS; // Apaga o aviso após
+                                                           // o tempo
+                                                           // configurado
+                    changeState(RobotState::IDLE);
+                }
+            }
+            // Feedback visual intermediário se estiver segurando para ativar
+            // (opcional)
+            else if (
+                !_isDebugMode &&
+                pressDuration > GameConfig::DEBUG_HOLD_FEEDBACK_MS
+            )
+            {
+                _display.setDebugText("HOLD...");
+                _debugTextClearTime =
+                    millis() +
+                    GameConfig::DEBUG_MSG_DURATION_MS; // Proteção para apagar o
+                                                       // HOLD caso o loop
+                                                       // atrase
+            }
+        }
+    }
+    else if (_buttonWasPressed)
+    {
+        // Botão foi solto
+        unsigned long pressDuration = millis() - _buttonPressTime;
+        _buttonWasPressed = false;
+
+        // Limpa o texto de "HOLD..." imediatamente se o usuário desistiu de
+        // segurar antes do tempo
+        if (!_debugToggleHandled && !_isDebugMode &&
+            pressDuration > GameConfig::DEBUG_DEBOUNCE_MS &&
+            pressDuration < GameConfig::DEBUG_LONG_PRESS_MS)
+        {
+            _display.setDebugText("");
+            _debugTextClearTime = 0;
+        }
+
+        // Se soltou e o tempo foi curto, processa como um clique (Short Press)
+        // A flag _debugToggleHandled garante que se foi um long press, não vai
+        // engatilhar isso.
+        if (!_debugToggleHandled &&
+            pressDuration > GameConfig::DEBUG_DEBOUNCE_MS)
+        {
+            if (_isDebugMode)
+            {
+                int currentStateInt = static_cast<int>(getCurrentStateEnum());
+                // Usa o STATE_COUNT dinâmico para não quebrar se adicionar
+                // novos estados
+                int nextStateInt = (currentStateInt + 1) %
+                                   static_cast<int>(RobotState::STATE_COUNT);
+                RobotState nextState = static_cast<RobotState>(nextStateInt);
+
+                Serial.print(F("[DEBUG] Forçando transição para: "));
+                Serial.println(getStateName(nextState));
+
+                changeState(nextState);
+            }
+            else
+            {
+                Serial.println(
+                    F("[DEBUG] Botão pressionado, mas modo Debug "
+                      "está inativo. (Segure para ativar)")
+                );
+            }
+        }
+    }
+}
+
+void GameController::processRFIDTag(const String& uid)
+{
+    // Proteção: Ignora tags se o robô estiver sob teste manual
+    if (_isDebugMode)
+    {
+        Serial.println(F("[DEBUG] Tag ignorada. Modo debug ativo."));
+        return;
+    }
+
+    // Proteção Pedagógica: Ignora tags durante a execução de etapas do ritual.
+    // Isso garante que a criança complete a ação (ex: esfregar) pelo tempo
+    // determinado antes de poder avançar ou repetir.
+    if (isRitualState(getCurrentStateEnum()))
+    {
+        Serial.println(
+            F("[GameController] Tag ignorada: Etapa do ritual em andamento.")
+        );
+        return;
+    }
+
+    Serial.print(F("[GameController] Tag Detectada: "));
+    Serial.println(uid);
+
+    // Delega o tratamento da tag para o estado atual (Strategy Pattern)
+    if (_currentState)
+    {
+        _currentState->handleRFID(this, uid);
+    }
+}
+
+/** @section Gerenciamento de Estados */
 
 void GameController::changeState(RobotState stateEnum)
 {
@@ -105,7 +271,10 @@ void GameController::changeState(RobotState stateEnum)
         }
     }
     // Estados neutros ou finais resetam o progresso para um novo ciclo
-    else if (stateEnum == RobotState::IDLE || stateEnum == RobotState::BOOT || stateEnum == RobotState::SUCCESS)
+    else if (
+        stateEnum == RobotState::IDLE || stateEnum == RobotState::BOOT ||
+        stateEnum == RobotState::SUCCESS
+    )
     {
         resetRitualProgress();
     }
@@ -117,6 +286,16 @@ void GameController::changeState(RobotState stateEnum)
 
 void GameController::changeState(State* newState)
 {
+    // Sincroniza o texto de debug SEMPRE que o estado tenta mudar,
+    // mesmo que a transição seja redundante (como tentar ir para IDLE estando
+    // em IDLE)
+    if (_isDebugMode && newState != nullptr)
+    {
+        _display.setDebugText(
+            String("DEBUG: ") + getStateName(newState->getStateEnum())
+        );
+    }
+
     // Evita transições redundantes (exceto para estados rituais que permitem
     // repetição controlada)
     if (_currentState == newState && !isRitualState(newState->getStateEnum()))
@@ -150,6 +329,7 @@ void GameController::changeState(State* newState)
     _display.lookAt(0.0f, 0.0f);
     _display.setParticleEffect(EffectType::NONE);
     _motion.stopAllAnimations();
+    _motion.centerAll();
 
     // Ciclo de vida: Entrada no novo estado
     if (_currentState != nullptr)
@@ -157,6 +337,16 @@ void GameController::changeState(State* newState)
         _currentState->enter(this);
     }
 }
+
+void GameController::handleRepeat()
+{
+    // Aciona a transição para o último estado ritualístico registrado.
+    // A lógica de contagem e erro será processada dentro do
+    // changeState(RobotState).
+    changeState(_lastRitualState);
+}
+
+/** @section Ações Auxiliares */
 
 void GameController::resetRitualProgress()
 {
@@ -203,14 +393,6 @@ bool GameController::isRitualState(RobotState state) const
         state == RobotState::SCRUB || state == RobotState::RINSE ||
         state == RobotState::DRY
     );
-}
-
-void GameController::handleRepeat()
-{
-    // Aciona a transição para o último estado ritualístico registrado.
-    // A lógica de contagem e erro será processada dentro do
-    // changeState(RobotState).
-    changeState(_lastRitualState);
 }
 
 RobotState GameController::getCurrentStateEnum() const

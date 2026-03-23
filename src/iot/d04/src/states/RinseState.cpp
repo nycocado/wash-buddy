@@ -1,34 +1,43 @@
 #include "states/RinseState.h"
+#include "ChoreographyLibrary.h"
 #include "GameController.h"
+
+static const std::vector<BehaviorVignette> RINSE_POOL = {
+    {eEmotions::Squint, 0.0f, -1.0f, std::vector<ChoreoStep>(), 2500},
+    {eEmotions::Focused, 0.0f, -0.8f, std::vector<ChoreoStep>(), 2000},
+    {eEmotions::Happy, 0.0f, -0.5f, std::vector<ChoreoStep>(), 3000}};
+
+/** @section Ciclo de Vida */
 
 void RinseState::enter(GameController* controller)
 {
-    // Feedback visual: "Squint" para simular os olhos sendo lavados
-    controller->getDisplay().setEyeMood(eEmotions::Squint);
-    controller->getDisplay().lookAt(0.0f, -1.0f); // Olha para as mãos na água
-
-    // Efeito de partículas que simula o fluxo da torneira
     controller->getDisplay().setParticleEffect(EffectType::RAIN_HEAVY);
 
-    // Estabiliza os motores
+    // One-Shot: escolhe UMA e executa apenas UMA VEZ
+    controller->getBehaviors().setPool(RINSE_POOL, 0, 0, false);
+
     controller->getMotion().centerAll();
 }
 
+void RinseState::exit(GameController* controller)
+{
+    controller->getBehaviors().stop();
+}
+
+/** @section Atualização Lógica */
+
 void RinseState::update(GameController* controller)
 {
-    // Aguarda o próximo passo (Secar) ou retorna para espera
     if (millis() - controller->getStateStartTime() > getTimeout())
     {
         controller->changeState(RobotState::WAITING);
     }
 }
 
-void RinseState::exit(GameController* controller) {}
+/** @section Tratamento de Eventos */
 
 void RinseState::handleRFID(GameController* controller, const String& uid)
 {
-    // Transição lógica: Enxaguar -> Secar
-    // Espera que o usuário pegue a toalha (tag da toalha)
     validateRFID(
         controller, uid, RFIDTags::FAUCET, RFIDTags::TOWEL, RobotState::DRY
     );

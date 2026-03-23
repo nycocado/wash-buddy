@@ -1,5 +1,6 @@
 #include "states/State.h"
 #include "GameController.h"
+/** @section Tratamento de Eventos */
 
 void State::validateRFID(
     GameController* controller,

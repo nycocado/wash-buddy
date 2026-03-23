@@ -1,6 +1,8 @@
 #include "states/SuccessState.h"
 #include "GameController.h"
 
+/** @section Ciclo de Vida */
+
 void SuccessState::enter(GameController* controller)
 {
     // Feedback visual: Humor "Glee" e chacoalhar de alegria no display
@@ -14,6 +16,10 @@ void SuccessState::enter(GameController* controller)
     controller->getMotion().waveHands();
 }
 
+void SuccessState::exit(GameController* controller) {}
+
+/** @section Atualização Lógica */
+
 void SuccessState::update(GameController* controller)
 {
     // Após o tempo de exibição do sucesso, retorna para IDLE para nova
@@ -24,6 +30,6 @@ void SuccessState::update(GameController* controller)
     }
 }
 
-void SuccessState::exit(GameController* controller) {}
+/** @section Tratamento de Eventos */
 
 void SuccessState::handleRFID(GameController* controller, const String& uid) {}

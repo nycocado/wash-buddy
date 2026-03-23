@@ -8,7 +8,7 @@ extern U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2;
 DisplayOrchestrator::DisplayOrchestrator(const DisplayConfig& config)
     : _config(config), _eyes(), // Motor de expressões e comportamento facial
       _animations(u8g2), // Sistema de partículas vinculado ao buffer da u8g2
-      _lastUpdate(0)
+      _lastUpdate(0), _debugText("")
 {
 }
 
@@ -27,8 +27,6 @@ void DisplayOrchestrator::update()
     unsigned long now = millis();
 
     // Controle de cadência (FPS throttling)
-    // Impede que o display tente atualizar mais rápido que o frameInterval
-    // definido, economizando ciclos de processamento no Core 0.
     if (now - _lastUpdate < _config.frameInterval)
     {
         return;
@@ -37,31 +35,134 @@ void DisplayOrchestrator::update()
     float deltaTime = (now - _lastUpdate) / 1000.0f;
     _lastUpdate = now;
 
-    // --- PIPELINE DE RENDERIZAÇÃO (Buffer Único) ---
-    // Este fluxo garante que não haja flickering. Desenhamos todos os elementos
-    // na RAM (u8g2 buffer) e enviamos o quadro pronto via I2C de uma só vez.
+    // --- LÓGICA DE TRANSIÇÃO PROGRESSIVA (CORTINAS) ---
+    // Gerencia o fechamento e abertura da 'cortina' entre olhos e ícones
+    const float transitionSpeed = 5.0f; // Velocidade da transição
 
-    // 1. Limpa o buffer de desenho para o novo quadro
+    if (_transitionState == TransitionState::CLOSING)
+    {
+        _transitionProgress += transitionSpeed * deltaTime;
+        if (_transitionProgress >= 1.0f)
+        {
+            _transitionProgress = 1.0f;
+            _transitionState = TransitionState::OPENING;
+            _currentInstructionIcon = _pendingIcon;
+            _instructionStartTime = now;
+        }
+    }
+    else if (_transitionState == TransitionState::OPENING)
+    {
+        _transitionProgress -= transitionSpeed * deltaTime;
+        if (_transitionProgress <= 0.0f)
+        {
+            _transitionProgress = 0.0f;
+            _transitionState = TransitionState::IDLE;
+        }
+    }
+
+    // --- LÓGICA DE EXPIRAÇÃO DE ÍCONE ---
+    if (_currentInstructionIcon != nullptr && _instructionEndTime > 0 &&
+        now > _instructionEndTime && _transitionState == TransitionState::IDLE)
+    {
+        // Se o ícone expirar, inicia a transição para voltar aos olhos
+        _pendingIcon = nullptr;
+        _transitionState = TransitionState::CLOSING;
+    }
+
+    // 1. Limpa o buffer de desenho
     u8g2.clearBuffer();
 
-    // 2. Processa lógicas de animação facial e desenha no buffer
-    _eyes.update();
-    _eyes.draw();
+    // 2. Desenha a base (Ícone de Instrução OU Olhos)
+    if (_currentInstructionIcon != nullptr)
+    {
+        // Animação de Floating (apenas se não estiver abrindo/fechando)
+        float floatOffset = 0;
+        if (_transitionState == TransitionState::IDLE)
+        {
+            floatOffset = sin(now * 0.004f) * 3.0f;
+        }
 
-    // 3. Atualiza partículas atmosféricas e sobrepõe ao quadro atual
+        int x = (128 - _instructionWidth) / 2;
+        int y = (int)((64 - _instructionHeight) / 2 + floatOffset);
+        u8g2.drawXBMP(
+            x, y, _instructionWidth, _instructionHeight, _currentInstructionIcon
+        );
+    }
+    else
+    {
+        _eyes.update();
+        _eyes.draw();
+    }
+
+    // 3. Efeito 'Zíper' de Transição (Cortinas)
+    if (_transitionProgress > 0.0f)
+    {
+        int h = (int)(_transitionProgress * 32); // Metade da tela
+        u8g2.setDrawColor(0);                    // Cor preta para apagar
+        u8g2.drawBox(0, 0, 128, h);              // Cortina superior
+        u8g2.drawBox(0, 64 - h, 128, h);         // Cortina inferior
+        u8g2.setDrawColor(1);                    // Volta ao branco normal
+    }
+
+    // 4. Partículas (Sempre visíveis)
     _animations.update(deltaTime);
     _animations.draw();
 
-    // 4. Transmite o buffer consolidado (Expressões + Partículas) para o OLED
+    // ... restante do código de debug e renderização ...
+
+    // 4. Debug Overlay
+    if (_debugText.length() > 0)
+    {
+        u8g2.setFont(u8g2_font_5x7_tf);
+        u8g2.setDrawColor(1);
+        u8g2.drawStr(2, 8, _debugText.c_str());
+    }
+
     u8g2.sendBuffer();
+}
+
+void DisplayOrchestrator::showInstruction(
+    const uint8_t* icon,
+    unsigned long durationMs
+)
+{
+    _pendingIcon = icon;
+    _instructionEndTime = (durationMs > 0) ? (millis() + durationMs) : 0;
+    _transitionState = TransitionState::CLOSING;
+}
+
+void DisplayOrchestrator::setInstructionIcon(
+    const uint8_t* icon,
+    uint8_t width,
+    uint8_t height
+)
+{
+    _pendingIcon = icon;
+    _instructionWidth = width;
+    _instructionHeight = height;
+    _instructionEndTime = 0; // Sem expiração automática
+    _transitionState = TransitionState::CLOSING;
+}
+
+void DisplayOrchestrator::setDebugText(const String& text)
+{
+    _debugText = text;
 }
 
 /**
  * @section Comandos de Expressão Facial
- * Métodos que delegam o controle de humor e olhar para o ExpressionEngine.
  */
 
-void DisplayOrchestrator::setEyeMood(eEmotions mood) { _eyes.setMood(mood); }
+void DisplayOrchestrator::setEyeMood(eEmotions mood)
+{
+    // Se mudarmos o humor e houver um ícone ativo, fechamos o zíper primeiro!
+    if (_currentInstructionIcon != nullptr || _pendingIcon != nullptr)
+    {
+        _pendingIcon = nullptr;
+        _transitionState = TransitionState::CLOSING;
+    }
+    _eyes.setMood(mood);
+}
 
 void DisplayOrchestrator::setEyeIdleMode(bool active)
 {

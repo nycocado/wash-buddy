@@ -1,6 +1,8 @@
 #include "states/SleepState.h"
 #include "GameController.h"
 
+/** @section Ciclo de Vida */
+
 void SleepState::enter(GameController* controller)
 {
     // Feedback físico: Centraliza motores antes de "dormir" para evitar tensões
@@ -10,12 +12,16 @@ void SleepState::enter(GameController* controller)
     // deve ser orquestrado pelo PowerController se implementado.
 }
 
+void SleepState::exit(GameController* controller) {}
+
+/** @section Atualização Lógica */
+
 void SleepState::update(GameController* controller)
 {
     // Permanece em sono até um evento externo de hardware (botão/sensor)
     // Se o RFID acordar o sistema, ele deve ser tratado via interrupção
 }
 
-void SleepState::exit(GameController* controller) {}
+/** @section Tratamento de Eventos */
 
 void SleepState::handleRFID(GameController* controller, const String& uid) {}

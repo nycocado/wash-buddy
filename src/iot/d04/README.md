@@ -13,6 +13,7 @@ O código foi reescrito sob uma arquitetura de C++ moderno, orientado a objetos,
 * **Feedback Visual e Emocional (OLED):** Um ecrã OLED de 128x64 exibe expressões faciais fluidas a 50 FPS (via motor `ExpressionEngine`) em conjunto com um avançado motor de partículas *customizado* (`ParticleSystem`) que sobrepõe efeitos climáticos e físicos (chuva, bolhas de sabão dinâmicas, correntes de ar onduladas e confetes festivos rotativos em 3D) dependendo do estado atual da máquina de estados.
 * **Movimento Físico Suavizado:** Três servomotores controlam os braços e a cabeça do robô através do `MotionController`. Em vez de deslocações abruptas, os movimentos utilizam algoritmos de *easing* logarítmico (suavização) calculados através de *Delta Time* (física independente da taxa de *frames*), tornando o robô orgânico e muito mais natural aos olhos de uma criança.
 * **Interação Tátil por RFID:** O sistema utiliza um módulo leitor MFRC522 gerido pelo `RFIDReader`. A criança interage aproximando diferentes "fichas" (ex: Cartões ou porta-chaves encapsulados em formas de objetos de banho) que acionam estados ou comandos específicos do robô.
+* **Orquestração de Comportamento (Vignettes):** O robô utiliza o `BehaviorEngine` para executar pequenas cenas ou "vinhetas" de comportamento (combinações de olhar, expressão e gesto) de forma aleatória ou única. Isto evita repetições mecânicas e simula uma personalidade "viva", incluindo períodos de repouso (breathing space) entre as ações.
 * **Gestão de Estados (State Machine):** Um controlador principal (`GameController`) orquestra as ações entre os motores e controladores mapeando um ciclo lógico estrito: `WET` (Molhar) -> `SOAP` (Ensaboar) -> `SCRUB` (Esfregar) -> `RINSE` (Enxaguar) -> `DRY` (Secar) -> `SUCCESS` (Sucesso).
 
 ## Arquitetura de Hardware
@@ -38,6 +39,7 @@ Os subsistemas foram divididos nas seguintes bibliotecas dedicadas:
 * `ParticleSystem`: Um motor de física leve e polimórfico que gere o ciclo de vida de efeitos visuais (Bolhas, Chuva, Vento e Confetes).
 * `ExpressionEngine`: Motor de renderização e comportamento que dá "vida" ao robô, controlando emoções, piscadas e a direção do olhar.
 * `RFIDReader`: Isolador do hardware SPI que abstrai a complexidade do sensor MFRC522 para detecções simples de cartões e leitura de UIDs.
+* `BehaviorEngine`: Motor de alto nível que gere o "pool" de comportamentos do robô, permitindo a execução de sequências expressivas e motoras síncronas com tempos de pausa configuráveis para um aspeto mais natural.
 
 ## Estrutura Atualizada do Repositório
 
@@ -47,7 +49,7 @@ Os subsistemas foram divididos nas seguintes bibliotecas dedicadas:
 │   └── iot/
 │       └── d04/             # Diretório Raiz do Firmware Atual (Projeto PlatformIO)
 │           ├── include/     # Cabeçalhos globais e enumerações semânticas (ex: RobotState.h)
-│           ├── lib/         # Motores e Controladores (ex: ParticleSystem, MotionController)
+│           ├── lib/         # Motores e Controladores (ex: BehaviorEngine, ParticleSystem)
 │           ├── src/         # Orquestrador Central (main.cpp e GameController)
 │           ├── platformio.ini # Configurações de compilação, otimização (LTO/O3) e dependências
 │           └── diagram.json   # Ficheiro de cablagem do simulador Wokwi

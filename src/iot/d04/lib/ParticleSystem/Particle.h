@@ -39,7 +39,8 @@ class Particle
         virtual void draw(U8G2& display) = 0;
 
     protected:
-        float x;     ///< Posição horizontal atual.
-        float y;     ///< Posição vertical atual.
-        float speed; ///< Velocidade base de deslocamento.
+        float
+            x; ///< Posição horizontal atual no sistema de coordenadas da tela.
+        float y; ///< Posição vertical atual no sistema de coordenadas da tela.
+        float speed; ///< Velocidade base de deslocamento (pixels por segundo).
 };

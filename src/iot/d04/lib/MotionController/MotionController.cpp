@@ -7,31 +7,79 @@ MotionController::MotionController(
     uint8_t pinHead,
     const MotionSettings& config
 )
-    : _pinL(pinArmL), _pinR(pinArmR), _pinH(pinHead), _config(config),
-      _currArmL(_config.defaultArmCenter),
-      _targetArmL(_config.defaultArmCenter), _speedArmL(_config.defaultSpeed),
-      _currArmR(_config.defaultArmCenter),
-      _targetArmR(_config.defaultArmCenter), _speedArmR(_config.defaultSpeed),
-      _currHead(_config.defaultHeadCenter),
-      _targetHead(_config.defaultHeadCenter), _speedHead(_config.headSpeed)
+    : _config(config), _armL(
+                           pinArmL,
+                           config.defaultArmCenter,
+                           config.defaultSpeed,
+                           config.minArmAngle,
+                           config.maxArmAngle
+                       ),
+      _armR(
+          pinArmR,
+          config.defaultArmCenter,
+          config.defaultSpeed,
+          config.minArmAngle,
+          config.maxArmAngle
+      ),
+      _head(
+          pinHead,
+          config.defaultHeadCenter,
+          config.headSpeed,
+          config.minHeadAngle,
+          config.maxHeadAngle
+      )
 {
 }
 
+/**
+ * @section Ciclo de Vida e Atualização
+ */
+
 void MotionController::init()
 {
-    // Vincula os objetos Servo aos pinos físicos do ESP32
-    _servoArmL.attach(_pinL);
-    _servoArmR.attach(_pinR);
-    _servoHead.attach(_pinH);
-
-    // Move imediatamente para a posição de repouso configurada
-    _servoArmL.write(_config.defaultArmCenter);
-    _servoArmR.write(_config.defaultArmCenter);
-    _servoHead.write(_config.defaultHeadCenter);
+    // A inicialização física dos pinos foi movida para o update()
+    // para ser 100% não bloqueante (Staggered Startup).
+    _initStage = 0;
+    _lastInitTime = millis();
+    Serial.println(F("[MotionController] Aguardando acionamento em cascata...")
+    );
 }
 
 void MotionController::update(float deltaTime)
 {
+    // --- STAGGERED STARTUP (NÃO-BLOQUEANTE) ---
+    // Ativa os servos um por um a cada 150ms para evitar pico de corrente
+    // (Brownout) que ocorre ao ligar múltiplos motores simultaneamente.
+    if (_initStage < 3)
+    {
+        if (millis() - _lastInitTime > 150)
+        {
+            if (_initStage == 0)
+            {
+                _armL.servo.attach(_armL.pin);
+                // Força o primeiro pulso PWM para a posição central.
+                // O delay de 150ms antes do próximo servo protege contra picos
+                // de corrente.
+                _armL.servo.write((int)round(_armL.currentAngle));
+            }
+            else if (_initStage == 1)
+            {
+                _armR.servo.attach(_armR.pin);
+                _armR.servo.write((int)round(_armR.currentAngle));
+            }
+            else if (_initStage == 2)
+            {
+                _head.servo.attach(_head.pin);
+                _head.servo.write((int)round(_head.currentAngle));
+                Serial.println(F("[MotionController] Todos os servos online."));
+            }
+
+            _initStage++;
+            _lastInitTime = millis();
+        }
+        return; // Sai do update enquanto não terminar de ligar os motores
+    }
+
     // --- ATUALIZAÇÃO DE COREOGRAFIAS ---
     // Verifica se há passos pendentes em cada motor de sequência.
     // Se um novo passo for detectado, atualiza o alvo e a velocidade do motor.
@@ -51,29 +99,77 @@ void MotionController::update(float deltaTime)
         moveArmR(step->targetAngle, step->speed);
     }
 
-    // --- INTERPOLAÇÃO DE MOVIMENTO (LERP) ---
-    // Em vez de mover o servo instantaneamente, calculamos uma posição
-    // intermediária baseada no tempo decorrido (deltaTime). Isso cria
-    // um movimento fluido e orgânico, similar ao de um ser vivo.
+    // --- GERENCIADOR DE INÉRCIA (INERTIA GATE) ---
+    // Mesmo que o Slew Rate limite a aceleração, se múltiplos motores
+    // começarem a se mover do zero absoluto no exato mesmo milissegundo,
+    // a soma da corrente de arranque (Inrush) deles pode causar brownout.
+    // O 'initiationTokenUsed' garante que apenas UM motor pode "quebrar a
+    // inércia" por frame, desacoplando os picos elétricos sem afetar a fluidez
+    // visual.
+    bool initiationTokenUsed = false;
 
-    // Braço Esquerdo
-    _currArmL = lerp(_currArmL, _targetArmL, deltaTime, _speedArmL);
-    _servoArmL.write((int)round(_currArmL));
+    // A física é processada individualmente para cada eixo de forma encapsulada
+    if (updateAxisPhysics(_armL, deltaTime, initiationTokenUsed))
+        initiationTokenUsed = true;
+    if (updateAxisPhysics(_armR, deltaTime, initiationTokenUsed))
+        initiationTokenUsed = true;
+    if (updateAxisPhysics(_head, deltaTime, initiationTokenUsed))
+        initiationTokenUsed = true;
+}
 
-    // Braço Direito
-    _currArmR = lerp(_currArmR, _targetArmR, deltaTime, _speedArmR);
-    _servoArmR.write((int)round(_currArmR));
+/**
+ * @section Física e Interpolação (Controle de Corrente)
+ */
 
-    // Cabeça
-    _currHead = lerp(_currHead, _targetHead, deltaTime, _speedHead);
-    _servoHead.write((int)round(_currHead));
+bool MotionController::updateAxisPhysics(
+    MotorAxis& axis,
+    float deltaTime,
+    bool initiationTokenUsed
+)
+{
+    // Threshold para considerar que um eixo precisa sair do estado de repouso
+    const float MOVEMENT_THRESHOLD = 0.5f;
+    bool needsStart = !axis.isMoving && abs(axis.currentAngle - axis.targetAngle
+                                        ) > MOVEMENT_THRESHOLD;
+    bool tokenConsumed = false;
+
+    // Se o eixo já estiver em movimento, ou se ele precisa iniciar E o token de
+    // inércia deste frame ainda estiver disponível:
+    if (axis.isMoving || (needsStart && !initiationTokenUsed))
+    {
+        if (needsStart)
+        {
+            tokenConsumed = true; // Consumiu o token de inércia deste frame
+        }
+
+        axis.isMoving = true;
+
+        // Aplica a interpolação suave (Slew Rate Limited)
+        axis.currentAngle = lerp(
+            axis.currentAngle,
+            axis.targetAngle,
+            deltaTime,
+            axis.speed,
+            _config.maxVelocity
+        );
+        axis.servo.write((int)round(axis.currentAngle));
+
+        // Verifica se chegou ao destino
+        if (abs(axis.currentAngle - axis.targetAngle) <= MOVEMENT_THRESHOLD)
+        {
+            axis.isMoving = false;
+        }
+    }
+
+    return tokenConsumed;
 }
 
 float MotionController::lerp(
     float current,
     float target,
     float deltaTime,
-    float speed
+    float speed,
+    float maxVelocity
 )
 {
     // Se a diferença for insignificante, finaliza o movimento no alvo exato
@@ -82,48 +178,75 @@ float MotionController::lerp(
         return target;
     }
 
-    // Interpolação Exponencial: o movimento começa rápido e suaviza ao chegar
-    // no alvo
-    return current + (target - current) * (1.0f - expf(-speed * deltaTime));
+    // Calcula o deslocamento ideal da curva exponencial (primeira ordem)
+    // Isso cria um movimento orgânico que desacelera suavemente ao se aproximar
+    // do alvo.
+    float rawDisplacement =
+        (target - current) * (1.0f - expf(-speed * deltaTime));
+
+    // Calcula o deslocamento máximo permitido fisicamente (Slew Rate)
+    // maxVelocity é dado em graus por segundo. Evita picos de corrente (Stall
+    // current) ao impedir que o motor tente dar um passo muito grande em um
+    // único frame.
+    float maxDisplacement = maxVelocity * deltaTime;
+
+    // Aplica o Clamping (Limitação) de aceleração
+    if (rawDisplacement > maxDisplacement)
+    {
+        rawDisplacement = maxDisplacement;
+    }
+    else if (rawDisplacement < -maxDisplacement)
+    {
+        rawDisplacement = -maxDisplacement;
+    }
+
+    return current + rawDisplacement;
 }
+
+/**
+ * @section Comandos de Movimento Individual
+ */
 
 void MotionController::moveArmL(int angle, float speed)
 {
-    _targetArmL =
-        (float)constrain(angle, _config.minArmAngle, _config.maxArmAngle);
-    _speedArmL = speed < 0.0f ? _config.defaultSpeed : speed;
+    _armL.setTarget(angle, speed > 0.0f ? speed : _config.defaultSpeed);
 }
 
 void MotionController::moveArmR(int angle, float speed)
 {
-    _targetArmR =
-        (float)constrain(angle, _config.minArmAngle, _config.maxArmAngle);
-    _speedArmR = speed < 0.0f ? _config.defaultSpeed : speed;
+    _armR.setTarget(angle, speed > 0.0f ? speed : _config.defaultSpeed);
 }
 
 void MotionController::moveHead(int angle, float speed)
 {
-    _targetHead =
-        (float)constrain(angle, _config.minHeadAngle, _config.maxHeadAngle);
-    _speedHead = speed < 0.0f ? _config.headSpeed : speed;
+    _head.setTarget(angle, speed > 0.0f ? speed : _config.headSpeed);
 }
 
 void MotionController::centerAll()
 {
-    moveArmL(_config.defaultArmCenter, 8.0f);
-    moveArmR(_config.defaultArmCenter, 8.0f);
-    moveHead(_config.defaultHeadCenter, 4.0f);
+    // Velocidades bem baixas para um retorno suave e econômico
+    moveArmL(_config.defaultArmCenter, 1.5f);
+    moveArmR(_config.defaultArmCenter, 1.5f);
+    moveHead(_config.defaultHeadCenter, 1.0f);
 }
+
+/**
+ * @section Comandos de Gestos Prontos
+ */
 
 void MotionController::waveHands()
 {
-    moveArmL(160, 15.0f);
-    moveArmR(20, 15.0f);
+    moveArmL(130, 15.0f);
+    moveArmR(50, 15.0f);
 }
 
 void MotionController::lookLeft() { moveHead(150, 6.0f); }
 
 void MotionController::lookRight() { moveHead(30, 6.0f); }
+
+/**
+ * @section Gestão de Coreografias
+ */
 
 void MotionController::playHeadChoreography(
     const std::vector<ChoreoStep>& choreography,

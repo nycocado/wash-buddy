@@ -5,47 +5,51 @@
 
 /**
  * @class RFIDReader
- * @brief Interface simplificada para leitura de tags RFID (MFRC522).
+ * @brief Interface de alto nível para o leitor de cartões RFID (MFRC522).
  *
- * Esta classe abstrai a complexidade da biblioteca MFRC522, fornecendo
- * métodos diretos para inicialização, detecção de presença e extração
- * de UIDs formatados.
+ * Esta classe encapsula a biblioteca MFRC522, oferecendo uma interface
+ * simplificada e não-bloqueante para detectar e identificar tags RFID
+ * utilizadas no ritual de lavagem (ex: sabonete, toalha).
  */
 class RFIDReader
 {
     public:
         /**
-         * @brief Construtor do leitor.
-         * @param sda Pino de seleção (SDA/SS).
-         * @param rst Pino de reset.
+         * @brief Construtor do leitor RFID.
+         * @param sda Pino de seleção do chip (SDA/SS).
+         * @param rst Pino de reset do hardware.
          */
         RFIDReader(uint8_t sda, uint8_t rst);
 
         /**
-         * @brief Inicializa o hardware do leitor e ativa a antena.
+         * @brief Inicializa o hardware do leitor e liga a antena.
+         * Deve ser chamado uma única vez no setup() do Arduino.
          */
         void init();
 
         /**
-         * @brief Verifica se há um novo cartão no campo de leitura.
-         * @return True se um cartão foi detectado.
+         * @brief Verifica se existe uma nova tag RFID próxima à antena.
+         * Implementa um debounce temporal para evitar leituras repetitivas.
+         * @return True se um novo cartão foi detectado com sucesso.
          */
         bool isCardPresent();
 
         /**
-         * @brief Lê e formata o UID do cartão atual.
-         * @return String com o UID formatado (ex: "AA:BB:CC:DD"), ou vazio se
-         * falhar.
+         * @brief Realiza a leitura e formatação do UID da tag.
+         * @return String contendo o UID em formato hexadecimal (ex:
+         * "A1:B2:C3:D4"). Retorna uma string vazia se a leitura falhar.
          */
         String readCardUID();
 
         /**
-         * @brief Desativa a antena e coloca o leitor em modo de baixo consumo.
+         * @brief Coloca o hardware do MFRC522 em modo de economia de energia.
+         * Desativa a antena e o oscilador interno.
          */
         void prepareForSleep();
 
         /**
-         * @brief Reativa o leitor saindo do modo de economia.
+         * @brief Acorda o hardware do leitor do modo sleep.
+         * Religando a antena e preparando para novas leituras.
          */
         void wakeUp();
 
@@ -53,5 +57,7 @@ class RFIDReader
         MFRC522 _mfrc522;
         uint8_t _sdaPin, _rstPin;
         unsigned long _lastReadTime = 0;
+
+        /// Intervalo mínimo entre leituras do mesmo cartão para evitar spam
         static constexpr unsigned long READ_DEBOUNCE_MS = 800;
 };

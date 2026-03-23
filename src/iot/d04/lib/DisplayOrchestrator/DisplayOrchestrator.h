@@ -105,6 +105,34 @@ class DisplayOrchestrator
         void setMaxParticles(int max);
 
         /**
+         * @brief Exibe um ícone de instrução por um tempo determinado.
+         * Após o tempo expirar, o display volta a mostrar os olhos.
+         * @param icon Ponteiro PROGMEM para o XBM.
+         * @param durationMs Tempo em milissegundos (0 para fixo).
+         */
+        void
+        showInstruction(const uint8_t* icon, unsigned long durationMs = 3000);
+
+        /**
+         * @brief Define o ícone de instrução a ser exibido (sem timeout).
+         */
+        void setInstructionIcon(
+            const uint8_t* icon,
+            uint8_t width = 64,
+            uint8_t height = 64
+        );
+
+        /**
+         * @brief Verifica se um ícone de instrução ou uma transição está ativa.
+         */
+        bool isInstructionActive() const
+        {
+            return (_currentInstructionIcon != nullptr) ||
+                   (_pendingIcon != nullptr) ||
+                   (_transitionState != TransitionState::IDLE);
+        }
+
+        /**
          * @brief Limpa manualmente o buffer interno de desenho.
          */
         void clear();
@@ -124,9 +152,33 @@ class DisplayOrchestrator
          */
         void wakeUp();
 
+        /**
+         * @brief Exibe um texto de debug no canto superior da tela.
+         * @param text O texto a ser exibido. Deixe vazio ("") para ocultar.
+         */
+        void setDebugText(const String& text);
+
     private:
         const DisplayConfig _config;
         ExpressionEngine _eyes;
         ParticleSystem _animations;
         unsigned long _lastUpdate;
+        String _debugText;
+
+        const uint8_t* _currentInstructionIcon = nullptr;
+        const uint8_t* _pendingIcon = nullptr; // Próximo ícone a ser mostrado
+        uint8_t _instructionWidth = 64;
+        uint8_t _instructionHeight = 64;
+        unsigned long _instructionStartTime = 0;
+        unsigned long _instructionEndTime = 0;
+
+        // Controle de Transição
+        enum class TransitionState
+        {
+            IDLE,
+            CLOSING,
+            OPENING
+        };
+        TransitionState _transitionState = TransitionState::IDLE;
+        float _transitionProgress = 0.0f;
 };

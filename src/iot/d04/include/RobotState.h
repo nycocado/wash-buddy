@@ -22,5 +22,6 @@ enum class RobotState
              ///< aceno).
     ERROR,   ///< Indicação de ação incorreta ou tag fora de ordem.
     WAITING, ///< Estado de transição aguardando a próxima ação do usuário.
-    SLEEP    ///< Modo de baixo consumo (Deep Sleep) para economia de bateria.
+    SLEEP,   ///< Modo de baixo consumo (Deep Sleep) para economia de bateria.
+    STATE_COUNT ///< Marcador automático do número total de estados.
 };
