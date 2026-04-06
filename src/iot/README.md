@@ -27,8 +27,6 @@ O projeto continua assente no ecossistema da framework Arduino utilizando um **E
 * **Atuadores de Corpo:** 3x Micro Servos SG90 ligados através de pinos com suporte a hardware PWM.
 * **Sistema de Alimentação:** Bateria LiPo com módulo de carregamento.
 
-*(Pode visualizar a montagem exata dos pinos no simulador interativo abrindo o ficheiro `diagram.json`)*.
-
 ## Arquitetura de Software (Firmware)
 
 O projeto usa **PlatformIO** em vez do clássico Arduino IDE. O *core* foi desenhado numa abordagem de **Padrão de Opções (Options Pattern)**, promovendo alto encapsulamento, segurança de memória e a eliminação total de *Magic Numbers* e macros *#define* inseguras na lógica.
