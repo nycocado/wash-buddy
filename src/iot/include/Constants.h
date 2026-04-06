@@ -16,11 +16,11 @@ namespace Pins
      * O leitor RFID é usado para identificar os objetos (sabão, toalha, etc.)
      * via tags.
      */
-    constexpr uint8_t SPI_SCK = 33;  ///< Pino de Clock (SCK)
-    constexpr uint8_t SPI_MISO = 26; ///< Pino Master In Slave Out (MISO)
+    constexpr uint8_t SPI_SCK = 26;  ///< Pino de Clock (SCK)
+    constexpr uint8_t SPI_MISO = 33; ///< Pino Master In Slave Out (MISO)
     constexpr uint8_t SPI_MOSI = 25; ///< Pino Master Out Slave In (MOSI)
-    constexpr uint8_t RFID_SDA = 32; ///< Pino de Seleção de Escravo (SS/SDA)
-    constexpr uint8_t RFID_RST = 27; ///< Pino de Reset do MFRC522
+    constexpr uint8_t RFID_SDA = 27; ///< Pino de Seleção de Escravo (SS/SDA)
+    constexpr uint8_t RFID_RST = 14; ///< Pino de Reset do MFRC522
 
     /**
      * @brief Pinos para comunicação I2C com o Display OLED (SH1106).
@@ -28,7 +28,7 @@ namespace Pins
      * robô.
      */
     constexpr uint8_t OLED_SDA = 17; ///< Pino de Dados I2C
-    constexpr uint8_t OLED_SCL = 16; ///< Pino de Clock I2C
+    constexpr uint8_t OLED_SCL = 22; ///< Pino de Clock I2C
 
     /**
      * @brief Pinos PWM para controle dos Servomotores.
@@ -37,11 +37,11 @@ namespace Pins
      * movimentos simultâneos e fluidos sem jitter.
      */
     constexpr uint8_t SERVO_ARM_L =
-        13; ///< Braço Esquerdo: Usado para acenar ou gesticular
+        21; ///< Braço Esquerdo: Usado para acenar ou gesticular
     constexpr uint8_t SERVO_ARM_R =
-        14; ///< Braço Direito: Usado para acenar ou gesticular
+        19; ///< Braço Direito: Usado para acenar ou gesticular
     constexpr uint8_t SERVO_HEAD =
-        4; ///< Movimento da Cabeça: Permite olhar para os lados
+        18; ///< Movimento da Cabeça: Permite olhar para os lados
 
     // --- SENSORES E ENTRADAS ---
     constexpr uint8_t POT_VOLUME = 34; ///< Potenciômetro analógico (ADC)
@@ -57,7 +57,7 @@ namespace Pins
      * @brief Pino de controle do MOSFET N-Channel.
      * Habilita/Desabilita a alimentação principal dos Servomotores.
      */
-    constexpr uint8_t MOSFET_MOTORS = 22;
+    constexpr uint8_t MOSFET_MOTORS = 13;
 
     /**
      * @brief Pino de sinal para o módulo de bateria (Power-Off).
@@ -70,9 +70,9 @@ namespace Pins
      * @note Usando as portas TXD2/RXD2 naturais do ESP32 (GPIO 17 e 16).
      */
     constexpr uint8_t AUDIO_TX =
-        19; ///< Pino TX do ESP32 (conecta no RX do player)
+        16; ///< Pino TX do ESP32 (conecta no RX do player)
     constexpr uint8_t AUDIO_RX =
-        21; ///< Pino RX do ESP32 (conecta no TX do player)
+        4; ///< Pino RX do ESP32 (conecta no TX do player)
 
 } // namespace Pins
 
