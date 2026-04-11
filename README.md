@@ -1,76 +1,80 @@
 # Wash Buddy
 
-O **Wash Buddy** é um companheiro robótico interativo concebido para incentivar e gamificar os hábitos de higiene das crianças, transformando a lavagem das mãos ou o banho numa experiência visual e física divertida. Através de ecrãs expressivos, movimentos físicos e interação por cartões, o robô guia a criança ao longo dos passos recomendados para uma lavagem perfeita.
+O **Wash Buddy** é um companheiro robótico interativo concebido para incentivar e gamificar os hábitos de higiene das crianças, transformando a lavagem das mãos ou o banho numa experiência visual e física divertida. Através de expressões faciais fluidas, movimentos orgânicos e interação por rádio frequência (RFID), o robô guia a criança ao longo dos passos recomendados para uma higienização perfeita.
 
 ## Visão Geral do Sistema
 
-O projeto original foi completamente reformulado para se focar numa experiência tátil e "standalone" (sem a necessidade de smartphones parentais ou conectividade Bluetooth para a sua operação base). O robô agora reage nativamente a *Tags* RFID, exibindo feedback emocional num ecrã OLED e movendo os seus braços e cabeça para interagir com o utilizador de forma síncrona com os ciclos de lavagem. O sistema de deteção por Strain Gauges e Giroscópio (MPU-6050) foi arquivado a favor de uma arquitetura mecânica direta (Servos) e de aproximação por rádio frequência.
+O projeto evoluiu de um conceito inicial baseado em sensores de pressão para uma experiência **standalone** e imersiva. O robô reage nativamente a *Tags* RFID, exibindo feedback emocional num ecrã OLED e movendo os seus braços e cabeça de forma síncrona com os ciclos de lavagem.
 
-O código foi reescrito sob uma arquitetura de C++ moderno, orientado a objetos, assente num padrão de motores e controladores fortemente tipados e altamente otimizados para microcontroladores.
+Esta versão final foi desenvolvida em estreita colaboração com a equipa de Design **D04**, resultando numa integração harmoniosa entre o hardware eletrónico e o artefacto físico.
 
 ## Funcionalidades Principais
 
-* **Feedback Visual e Emocional (OLED):** Um ecrã OLED de 128x64 exibe expressões faciais fluidas a 50 FPS (via motor `ExpressionEngine`) em conjunto com um avançado motor de partículas *customizado* (`ParticleSystem`) que sobrepõe efeitos climáticos e físicos (chuva, bolhas de sabão dinâmicas, correntes de ar onduladas e confetes festivos rotativos em 3D) dependendo do estado atual da máquina de estados.
-* **Movimento Físico Suavizado:** Três servomotores controlam os braços e a cabeça do robô através do `MotionController`. Em vez de deslocações abruptas, os movimentos utilizam algoritmos de *easing* logarítmico (suavização) calculados através de *Delta Time* (física independente da taxa de *frames*), tornando o robô orgânico e muito mais natural aos olhos de uma criança.
-* **Interação Tátil por RFID:** O sistema utiliza um módulo leitor MFRC522 gerido pelo `RFIDReader`. A criança interage aproximando diferentes "fichas" (ex: Cartões ou porta-chaves encapsulados em formas de objetos de banho) que acionam estados ou comandos específicos do robô.
-* **Áudio de Alta Fidelidade Sincronizado:** Integração com o hardware DFPlayer Pro (`AudioController`) para reprodução de playlists de áudio (MP3/WAV) específicas para cada etapa do ritual, proporcionando feedback sonoro imersivo e instruções claras.
-* **Orquestração de Comportamento (Vignettes):** O robô utiliza o `BehaviorEngine` para executar pequenas cenas ou "vinhetas" de comportamento (combinações de olhar, expressão e gesto) de forma aleatória ou única. Isto evita repetições mecânicas e simula uma personalidade "viva", incluindo períodos de repouso (breathing space) entre as ações.
-* **Gestão de Estados (State Machine):** Um controlador principal (`GameController`) orquestra as ações entre os motores e controladores mapeando um ciclo lógico estrito: `WET` (Molhar) -> `SOAP` (Ensaboar) -> `SCRUB` (Esfregar) -> `RINSE` (Enxaguar) -> `DRY` (Secar) -> `SUCCESS` (Sucesso).
-
-## Arquitetura de Hardware
-
-O projeto continua assente no ecossistema da framework Arduino utilizando um **ESP32** (suportando a variante C3 / DevKit C V4), e integra os seguintes componentes base atualizados:
-
-* **Microcontrolador:** ESP32 (DevKit C V4 / HW-466AB)
-* **Ecrã Principal:** Display OLED I2C 0.96" (Controlador SSD1306) no endereço `0x3C`
-* **Leitor de Entrada:** Módulo RFID RC522 (Interface SPI Rápida)
-* **Atuadores de Corpo:** 3x Micro Servos SG90 ligados através de pinos com suporte a hardware PWM.
-* **Sistema de Alimentação:** Bateria LiPo com módulo de carregamento.
-
-*(Pode visualizar a montagem exata dos pinos no simulador interativo abrindo o ficheiro `diagram.json`)*.
+* **Feedback Visual e Emocional (OLED):** Expressões faciais a 50 FPS processadas em tempo real, com um motor de partículas customizado para efeitos de bolhas, chuva e confetes.
+* **Movimentação Orgânica Suavizada:** Três servomotores controlados com algoritmos de *easing* logarítmico, garantindo movimentos naturais e seguros.
+* **Interação Tátil por RFID:** Interface segura e à prova de água através da leitura de objetos lúdicos (sabão, esponja, toalha) encapsulando tags RFID.
+* **Áudio de Alta Fidelidade Sincronizado:** Instruções de voz e feedback sonoro via DFPlayer Pro, mapeados para cada etapa do ritual de higiene.
+* **Gestão de Energia Inteligente:** Circuito de auto-desligamento físico via MOSFET para preservação da bateria (4400mAh) após a conclusão do ciclo ou inatividade prolongada.
 
 ## Arquitetura de Software (Firmware)
 
-O projeto usa **PlatformIO** em vez do clássico Arduino IDE. O *core* foi desenhado numa abordagem de **Padrão de Opções (Options Pattern)**, promovendo alto encapsulamento, segurança de memória e a eliminação total de *Magic Numbers* e macros *#define* inseguras na lógica.
+O firmware foi desenhado sob uma arquitetura modular em **C++ Moderno (PlatformIO)**, separando a abstração de hardware da camada de interface e comportamento.
 
-Os subsistemas foram divididos nas seguintes bibliotecas dedicadas:
+### Padrões de Projeto e Multiprocessamento
 
-* `AudioController`: Gerencia o hardware DFPlayer Pro com fila de comandos assíncrona.
-* `DisplayOrchestrator`: Atua como uma classe *Facade* que esconde e orquestra a complexidade visual, sincronizando o motor de expressões com o sistema de partículas.
-* `MotionController`: Controlador físico que lida com a interpolação matemática dos motores, garantindo movimentos naturais e seguros dentro dos limites angulares.
-* `ParticleSystem`: Um motor de física leve e polimórfico que gere o ciclo de vida de efeitos visuais (Bolhas, Chuva, Vento e Confetes).
-* `ExpressionEngine`: Motor de renderização e comportamento que dá "vida" ao robô, controlando emoções, piscadas e a direção do olhar.
-* `RFIDReader`: Isolador do hardware SPI que abstrai a complexidade do sensor MFRC522 para detecções simples de cartões e leitura de UIDs.
-* `PowerController`: Gerencia o ciclo de vida de energia, lidando com o desligamento físico via hardware.
-* `BehaviorEngine`: Motor de alto nível que gere o "pool" de comportamentos do robô, permitindo a execução de sequências expressivas e motoras síncronas com tempos de pausa configuráveis para um aspeto mais natural.
+* **State & Options Patterns:** O fluxo é gerido por uma Máquina de Estados Finita (FSM) altamente tipada, eliminando condicionais complexas e facilitando a expansão do sistema.
+* **FreeRTOS (Dual-Core):** O **Core 0** do ESP32 é dedicado exclusivamente à renderização gráfica pesada, enquanto o **Core 1** processa a lógica de controlo, áudio e interpolação dos motores, garantindo uma interface fluida a 50 FPS.
 
-## Estrutura Atualizada do Repositório
+## Arquitetura de Hardware
+
+A eletrónica foi consolidada numa **PCB customizada de dois andares (Stacked PCB)** para isolar o ruído elétrico dos motores dos barramentos de comunicação sensíveis:
+
+* **Módulo Superior (Lógica):** ESP32-WROOM-32, OLED 0.96", RFID RC522 e DFPlayer Pro.
+* **Módulo Inferior (Potência):** Carregador DFR1026, MOSFETs de isolamento e filtragem de ruído.
+
+### Principais Componentes (BOM D04)
+
+| Componente | Função |
+| :--- | :--- |
+| **ESP32-WROOM-32** | Microcontrolador Principal |
+| **OLED 0.96" I2C** | Interface Visual (Expressões) |
+| **RC522 RFID** | Sensor de Entrada (Tags 13.56MHz) |
+| **DFPlayer Pro** | Controlador de Áudio + 2x Colunas 2W |
+| **3x Servos SG90** | Atuadores de Cabeça e Braços |
+| **Bateria 4400mAh** | Alimentação LiPo (2x 2200mAh) |
+
+## Estrutura do Repositório
 
 ```text
 .
 ├── src/
-│   └── iot/                # Diretório Raiz do Firmware Atual (Projeto PlatformIO)
-│      ├── include/         # Cabeçalhos globais e enumerações semânticas (ex: RobotState.h)
-│      ├── lib/             # Motores e Controladores (ex: BehaviorEngine, ParticleSystem)
-│      ├── sounds/          # Arquivos de áudio otimizados para o hardware (WAV)
-│      ├── src/             # Orquestrador Central (main.cpp e GameController)
-│      ├── test/            # Suíte de testes unitários (Lógica, FSM e Sanidade de Tags)
-│      ├── platformio.ini   # Configurações de compilação, otimização (LTO/O3) e dependências
-│      ├── .clang-format    # Configurações de formatação de código para consistência
-├── docs/                   # Relatórios e documentação técnica
-└── README.md               # Visão Geral do Projeto
+│   └── iot/            # Código-fonte do Firmware (Projeto PlatformIO)
+│      ├── include/     # Cabeçalhos globais e enumerações semânticas
+│      ├── lib/         # Motores e Controladores (Behavior, Particles, Expression)
+│      ├── src/         # Orquestrador Central (main.cpp e GameController)
+│      └── test/        # Suíte de testes unitários (Unity)
+├── docs/               # Relatórios (Milestone 1/2), BOMs e Esquemas Elétricos
+├── media/              # Assets visuais, vídeos e biblioteca de sons
+└── README.md           # Visão Geral do Projeto
 ```
 
-## Testes e Validação
+## Equipa e Responsabilidades
 
-O projeto utiliza o framework **Unity** para garantir a integridade do sistema. A suíte de testes cobre desde a matemática de suavização dos servos até testes de sanidade de configuração (como garantir que não existam UIDs de RFID duplicados), evitando falhas lógicas críticas durante a operação.
+* **Nycolas Souza:** Desenvolvimento integral do firmware (C++/PlatformIO), arquitetura OO, paralelização via FreeRTOS e coreografia matemática dos servos.
+* **Luan Ribeiro:** Engenharia de hardware e desenho do diagrama elétrico. Projetou o isolamento com MOSFETs e o circuito de auto-shutdown.
+* **Lohanne Guedes:** Prototipagem física e integração de laboratório. Responsável pela soldadura integral da PCB e montagem no chassi.
+* **Kira Sousa:** Desenho do sistema lógico, mapeamento das regras de negócio (FSM) e Sound Design (curadoria de áudio).
 
-## Equipa
+## Anexos e Documentação Técnica
 
-* Nycolas Souza
-* Luan Ribeiro
-* Lohanne Guedes
-* Kira Sousa
+1. **Código Fonte:** [src/iot/](src/iot/)
+2. **Esquema Elétrico (Final - D04):** [docs/milestone-2/circuit-d04.pdf](docs/milestone-2/circuit-d04.pdf)
+3. **Bill of Materials (BOM - D04):** [docs/milestone-2/bom-d04.xlsx](docs/milestone-2/bom-d04.xlsx)
+4. **Relatório Técnico (Milestone 2):** [docs/milestone-2/report.pdf](docs/milestone-2/report.pdf)
+5. **Vídeo de Demonstração:** [media/milestone-2/video.mp4](media/milestone-2/video.mp4)
+6. **Manual de Montagem:** [media/milestone-2/assembly-manual.png](media/milestone-2/assembly-manual.png)
+7. **Modelo Físico:** [media/milestone-2/physical-model.jpeg](media/milestone-2/physical-model.jpeg)
+8. **Arquivos de Áudio:** [media/sounds/](media/sounds/)
 
 ---
 *Projeto desenvolvido para a disciplina de Project Factory - 2026*
