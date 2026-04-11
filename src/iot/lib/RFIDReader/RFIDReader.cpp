@@ -13,6 +13,7 @@ void RFIDReader::init()
 {
     _mfrc522.PCD_Init();
     _mfrc522.PCD_AntennaOn();
+    _mfrc522.PCD_SetAntennaGain(_mfrc522.RxGain_max);
     Serial.println(F("[RFID] Pronto. Aguardando cartao..."));
 }
 
