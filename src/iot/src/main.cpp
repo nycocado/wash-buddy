@@ -1,17 +1,16 @@
 /**
  * @file main.cpp
- * @brief Ponto de entrada do firmware Wash-Buddy.
+ * @brief Entry point of the Wash-Buddy firmware.
  *
- * Este projeto utiliza a arquitetura Dual-Core do ESP32 via FreeRTOS para
- * garantir fluidez na interface de usuário e precisão na lógica de controle.
+ * This project uses the ESP32's dual-core architecture via FreeRTOS to
+ * ensure a smooth user interface and precise control logic.
  *
- * Divisão de Tarefas:
- * - Core 0 (Pro): Dedicado exclusivamente ao DisplayTask. Responsável pelas
- * animações complexas dos olhos e renderização do display OLED. Isso evita que
- * processamentos pesados de lógica ou leitura de sensores causem "stuttering"
- * visual.
- * - Core 1 (App): Executa o loop() principal do Arduino. Gerencia a Máquina de
- * Estados (FSM), leitura do RFID (SPI) e controle dos servomotores (PWM).
+ * Task split:
+ * - Core 0 (Pro): dedicated exclusively to DisplayTask. Responsible for
+ * the complex eye animations and OLED display rendering. This prevents
+ * heavy logic processing or sensor reads from causing visual "stuttering".
+ * - Core 1 (App): runs the Arduino main loop(). Manages the state machine
+ * (FSM), RFID reading (SPI), and servomotor control (PWM).
  */
 
 #include "AudioController.h"
@@ -24,18 +23,18 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-/** @section Instâncias de Hardware e Lógica */
+/** @section Hardware and Logic Instances */
 
-/// Leitor de tags RFID via barramento SPI
+/// RFID tag reader over the SPI bus
 RFIDReader rfid(Pins::RFID_SDA, Pins::RFID_RST);
 
-/// Orquestrador de interface visual para o display OLED
+/// Visual interface orchestrator for the OLED display
 DisplayOrchestrator display;
 
-/// Controlador de cinemática para os servos dos braços e cabeça
+/// Kinematics controller for the arm and head servos
 MotionController motion(Pins::SERVO_ARM_L, Pins::SERVO_ARM_R, Pins::SERVO_HEAD);
 
-/// Controlador resiliente para o subsistema de áudio DFPlayer Pro
+/// Resilient controller for the DFPlayer Pro audio subsystem
 AudioController audio(
     Serial2,
     Pins::AUDIO_RX,
@@ -44,26 +43,25 @@ AudioController audio(
     AudioSettings{AudioConfig::DEFAULT_VOLUME, AudioConfig::UPDATE_INTERVAL_MS}
 );
 
-/// Controlador de energia (MOSFET e sinal de desligamento)
+/// Power controller (MOSFET and shutdown signal)
 PowerController power(Pins::MOSFET_MOTORS, Pins::PIN_SHUTDOWN);
 
-/// Cérebro do sistema: gerencia a FSM e coordena os periféricos
+/// System's brain: manages the FSM and coordinates the peripherals
 GameController game(display, motion, rfid, audio, power);
 
-/** @section Handlers FreeRTOS */
+/** @section FreeRTOS Handlers */
 
-TaskHandle_t DisplayTaskHandle = NULL; ///< Handler para a tarefa de UI
-TaskHandle_t RFIDTaskHandle = NULL;    ///< Handler para a tarefa de sensores
-TaskHandle_t AudioTaskHandle = NULL;   ///< Handler para a tarefa de som
-QueueHandle_t rfidQueue;          ///< Fila de comunicação para UIDs de tags
-unsigned long lastMotionTime = 0; ///< Marca temporal para cálculo de delta-time
-bool isSystemSleeping =
-    false; ///< Flag para suspender tarefas antes do desligamento
+TaskHandle_t DisplayTaskHandle = NULL; ///< Handler for the UI task
+TaskHandle_t RFIDTaskHandle = NULL;    ///< Handler for the sensor task
+TaskHandle_t AudioTaskHandle = NULL;   ///< Handler for the sound task
+QueueHandle_t rfidQueue;               ///< Communication queue for tag UIDs
+unsigned long lastMotionTime = 0;      ///< Timestamp for delta-time computation
+bool isSystemSleeping = false; ///< Flag to suspend tasks before shutdown
 
-/** @section Tarefas (Tasks) */
+/** @section Tasks */
 
 /**
- * @brief Tarefa dedicada ao processamento de áudio no Core 1.
+ * @brief Task dedicated to audio processing on Core 1.
  */
 void audioTask(void* pvParameters)
 {
@@ -80,7 +78,7 @@ void audioTask(void* pvParameters)
 }
 
 /**
- * @brief Tarefa dedicada à atualização do Display OLED no Core 0.
+ * @brief Task dedicated to updating the OLED display on Core 0.
  */
 void displayTask(void* pvParameters)
 {
@@ -102,7 +100,7 @@ void displayTask(void* pvParameters)
 }
 
 /**
- * @brief Tarefa dedicada à leitura do RFID no Core 1.
+ * @brief Task dedicated to RFID reading on Core 1.
  */
 void rfidTask(void* pvParameters)
 {
@@ -128,26 +126,26 @@ void rfidTask(void* pvParameters)
     }
 }
 
-/** @section Ciclo de Vida: Inicialização */
+/** @section Lifecycle: Initialization */
 
 void setup()
 {
     Serial.begin(115200);
     Serial.println(F("\n[SYSTEM] Wash-Buddy v2.0 - Iniciando..."));
 
-    // Configuração de GPIOs básicos
+    // Basic GPIO configuration
     pinMode(Pins::BUTTON_DEBUG, INPUT_PULLDOWN);
 
-    // Inicialização do barramento SPI e RFID (Core 1)
+    // SPI bus and RFID initialization (Core 1)
     SPI.begin(Pins::SPI_SCK, Pins::SPI_MISO, Pins::SPI_MOSI);
     rfid.init();
 
-    // Inicialização do barramento I2C e Display (Core 0)
+    // I2C bus and display initialization (Core 0)
     Wire.begin(Pins::OLED_SDA, Pins::OLED_SCL);
     Wire.setClock(800000);
     display.init();
 
-    // Inicialização dos controladores
+    // Controller initialization
     power.init();
     motion.init();
     audio.init();
@@ -156,19 +154,19 @@ void setup()
     rfidQueue =
         xQueueCreate(5, sizeof(char) * HardwareConfig::RFID_BUFFER_SIZE);
 
-    // --- ORQUESTRAÇÃO DE NÚCLEOS (TASKS) ---
+    // --- CORE ORCHESTRATION (TASKS) ---
 
-    // Criação da tarefa de display fixada no Core 0
+    // Creates the display task pinned to Core 0
     xTaskCreatePinnedToCore(
         displayTask, "DisplayTask", 8192, NULL, 2, &DisplayTaskHandle, 0
     );
 
-    // Criação da tarefa de áudio fixada no Core 1
+    // Creates the audio task pinned to Core 1
     xTaskCreatePinnedToCore(
         audioTask, "AudioTask", 4096, NULL, 1, &AudioTaskHandle, 1
     );
 
-    // Criação da tarefa de RFID fixada no Core 1
+    // Creates the RFID task pinned to Core 1
     xTaskCreatePinnedToCore(
         rfidTask, "RFIDTask", 4096, NULL, 1, &RFIDTaskHandle, 1
     );
@@ -182,16 +180,16 @@ void loop()
     float deltaTime = (now - lastMotionTime) / 1000.0f;
     lastMotionTime = now;
 
-    // Atualiza cinemática dos servos (Core 1)
+    // Updates the servo kinematics (Core 1)
     motion.update(deltaTime);
 
-    // Processa tags RFID vindas da fila
+    // Processes RFID tags coming from the queue
     char uidBuffer[HardwareConfig::RFID_BUFFER_SIZE];
     if (xQueueReceive(rfidQueue, &uidBuffer, 0) == pdTRUE)
     {
         game.processRFIDTag(String(uidBuffer));
     }
 
-    // Processa FSM
+    // Processes the FSM
     game.update();
 }

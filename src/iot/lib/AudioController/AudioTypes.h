@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 /**
- * @brief Estrutura que representa uma faixa de áudio única.
+ * @brief Structure representing a single audio track.
  */
 struct AudioTrack
 {
@@ -12,7 +12,7 @@ struct AudioTrack
 };
 
 /**
- * @brief Estrutura que representa uma playlist (sequência de faixas).
+ * @brief Structure representing a playlist (sequence of tracks).
  */
 struct AudioPlaylist
 {

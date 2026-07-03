@@ -14,22 +14,22 @@ class AudioController;
 
 /**
  * @struct ChoreoAction
- * @brief Agrupa uma sequência de passos e um delay inicial para um motor.
+ * @brief Groups a sequence of steps and an initial delay for one motor.
  *
- * Utilizado pelo motor de comportamento para agendar movimentos específicos
- * em eixos individuais durante a execução de uma vinheta.
+ * Used by the behavior engine to schedule specific movements on individual
+ * axes while a vignette plays.
  */
 struct ChoreoAction
 {
-        std::vector<ChoreoStep> steps; ///< Passos da coreografia.
-        float delay = 0.0f;            ///< Atraso inicial em segundos.
-        bool loop = false; ///< Se a coreografia deve repetir em loop.
+        std::vector<ChoreoStep> steps; ///< Choreography steps.
+        float delay = 0.0f;            ///< Initial delay in seconds.
+        bool loop = false; ///< Whether the choreography should loop.
 
         /**
-         * @brief Construtor para facilitar a criação de ações com delay.
-         * @param s Vetor de passos (frames) da coreografia.
-         * @param d Tempo de espera em segundos antes de iniciar o movimento.
-         * @param l Define se o movimento deve ser repetido continuamente.
+         * @brief Constructor to simplify creating actions with a delay.
+         * @param s Vector of steps (frames) for the choreography.
+         * @param d Wait time in seconds before starting the movement.
+         * @param l Whether the movement should repeat continuously.
          */
         ChoreoAction(
             std::vector<ChoreoStep> s = {},
@@ -43,35 +43,33 @@ struct ChoreoAction
 
 /**
  * @struct BehaviorVignette
- * @brief Representa uma "esquete" ou micro-comportamento atômico do robô.
+ * @brief Represents a "sketch" or atomic micro-behavior of the robot.
  *
- * Define um estado completo de expressão (olhos, olhar, motores e som)
- * que o robô assume por um período determinado de tempo.
+ * Defines a complete expression state (eyes, gaze, motors, and sound) that
+ * the robot holds for a set period of time.
  */
 struct BehaviorVignette
 {
-        eEmotions mood; ///< Humor/Expressão facial a ser aplicada.
-        float lookX;    ///< Direção horizontal do olhar (-1.0 esquerda, 1.0
-                        ///< direita).
-        float lookY;    ///< Direção vertical do olhar (-1.0 baixo, 1.0 cima).
-        ChoreoAction head; ///< Coreografia da cabeça.
-        ChoreoAction armL; ///< Coreografia do braço esquerdo.
-        ChoreoAction armR; ///< Coreografia do braço direito.
-        AudioTrack
-            audioTrack; ///< Áudio opcional a ser disparado (id 0 = nenhum).
-        unsigned long durationMs; ///< Tempo de exibição desta vinheta (ms).
+        eEmotions mood;        ///< Mood/facial expression to apply.
+        float lookX;           ///< Horizontal look direction (-1.0 left, 1.0
+                               ///< right).
+        float lookY;           ///< Vertical look direction (-1.0 down, 1.0 up).
+        ChoreoAction head;     ///< Head choreography.
+        ChoreoAction armL;     ///< Left arm choreography.
+        ChoreoAction armR;     ///< Right arm choreography.
+        AudioTrack audioTrack; ///< Optional audio to trigger (id 0 = none).
+        unsigned long durationMs; ///< Display time for this vignette (ms).
 
         /**
-         * @brief Construtor completo para orquestração de múltiplos eixos e
-         * áudio.
-         * @param m Emoção/Humor visual.
-         * @param lx Coordenada X do olhar.
-         * @param ly Coordenada Y do olhar.
-         * @param h Configuração de movimento da cabeça.
-         * @param al Configuração de movimento do braço esquerdo.
-         * @param ar Configuração de movimento do braço direito.
-         * @param d Duração total da cena em milissegundos.
-         * @param audio Referência da faixa de áudio a ser tocada.
+         * @brief Full constructor to orchestrate multiple axes and audio.
+         * @param m Visual emotion/mood.
+         * @param lx Look X coordinate.
+         * @param ly Look Y coordinate.
+         * @param h Head movement configuration.
+         * @param al Left arm movement configuration.
+         * @param ar Right arm movement configuration.
+         * @param d Total scene duration in milliseconds.
+         * @param audio Reference to the audio track to play.
          */
         BehaviorVignette(
             eEmotions m,
@@ -91,31 +89,31 @@ struct BehaviorVignette
 
 /**
  * @class BehaviorEngine
- * @brief Motor de orquestração de comportamentos expressivos e motores.
+ * @brief Orchestration engine for expressive and motor behaviors.
  *
- * Esta classe gerencia a execução de "vinhetas" (BehaviorVignette), que são
- * combinações sincronizadas de expressões faciais, movimentos de braços/cabeça
- * e efeitos sonoros. O motor funciona de forma não-bloqueante, alternando entre
- * períodos de ação e repouso (silêncio orgânico).
+ * This class manages the execution of "vignettes" (BehaviorVignette),
+ * which are synchronized combinations of facial expressions, arm/head
+ * movements, and sound effects. The engine runs non-blocking, alternating
+ * between periods of action and rest (organic silence).
  */
 class BehaviorEngine
 {
     public:
         /**
-         * @brief Construtor padrão.
+         * @brief Default constructor.
          */
         BehaviorEngine();
 
         /**
-         * @brief Define o conjunto de comportamentos disponíveis e os
-         * parâmetros de cadência.
+         * @brief Sets the available behavior set and the cadence
+         * parameters.
          *
-         * @param pool Vetor de vinhetas que o robô pode executar.
-         * @param minPauseMs Tempo mínimo de repouso entre ações (ms).
-         * @param maxPauseMs Tempo máximo de repouso entre ações (ms).
-         * @param loop Se true, reinicia a lista ao chegar no fim.
-         * @param resetOnRest Se true, reseta a pose e expressão durante o
-         * repouso.
+         * @param pool Vector of vignettes the robot can run.
+         * @param minPauseMs Minimum rest time between actions (ms).
+         * @param maxPauseMs Maximum rest time between actions (ms).
+         * @param loop If true, restarts the list once it reaches the end.
+         * @param resetOnRest If true, resets the pose and expression during
+         * rest.
          */
         void setPool(
             const std::vector<BehaviorVignette>& pool,
@@ -126,15 +124,16 @@ class BehaviorEngine
         );
 
         /**
-         * @brief Atualiza a lógica do motor, gerenciando timers e disparando
-         * ações.
+         * @brief Updates the engine's logic, managing timers and
+         * triggering actions.
          *
-         * Deve ser chamado continuamente no loop principal ou em task dedicada.
+         * Must be called continuously in the main loop or a dedicated
+         * task.
          *
-         * @param display Referência ao orquestrador visual.
-         * @param motion Referência ao controlador de movimento.
-         * @param audio Referência ao controlador de áudio para disparar sons de
-         * vinheta.
+         * @param display Reference to the visual orchestrator.
+         * @param motion Reference to the motion controller.
+         * @param audio Reference to the audio controller, to trigger
+         * vignette sounds.
          */
         void update(
             DisplayOrchestrator& display,
@@ -143,40 +142,40 @@ class BehaviorEngine
         );
 
         /**
-         * @brief Interrompe qualquer ação em curso e limpa o pool.
+         * @brief Stops any ongoing action and clears the pool.
          */
         void stop();
 
         /**
-         * @brief Pausa ou retoma a execução do motor sem limpar o estado.
-         * @param paused True para pausar, False para retomar.
+         * @brief Pauses or resumes the engine without clearing its state.
+         * @param paused True to pause, false to resume.
          */
         void setPaused(bool paused) { _isPaused = paused; }
 
         /**
-         * @brief Verifica se o robô está executando uma ação ativa no momento.
-         * @return True se estiver em ação, False se estiver em repouso.
+         * @brief Checks whether the robot is currently running an active
+         * action.
+         * @return True if in action, false if at rest.
          */
         bool isInAction() const { return _isInAction; }
 
     private:
-        std::vector<BehaviorVignette> _pool; ///< Lista de comportamentos ativos
-        int _currentIndex = -1;              ///< Índice da vinheta atual
-        unsigned long _nextEventTime = 0; ///< Timestamp para o próximo evento
-        bool _isPaused = false;           ///< Estado de pausa do motor
-        bool _isInAction = false;         ///< Se há uma ação sendo executada
-        bool _loop = true;                ///< Se deve repetir o pool
-        bool _resetOnRest =
-            false; ///< Se deve voltar ao neutro durante o repouso
+        std::vector<BehaviorVignette> _pool; ///< List of active behaviors
+        int _currentIndex = -1;              ///< Current vignette index
+        unsigned long _nextEventTime = 0;    ///< Timestamp for the next event
+        bool _isPaused = false;              ///< Engine's pause state
+        bool _isInAction = false;            ///< Whether an action is running
+        bool _loop = true;                   ///< Whether to loop the pool
+        bool _resetOnRest = false; ///< Whether to return to neutral during rest
 
-        unsigned long _minPause = 1000; ///< Pausa mínima configurada
-        unsigned long _maxPause = 3000; ///< Pausa máxima configurada
+        unsigned long _minPause = 1000; ///< Configured minimum pause
+        unsigned long _maxPause = 3000; ///< Configured maximum pause
 
         /**
-         * @brief Seleciona e dispara a próxima ação do pool.
-         * @param display Referência ao orquestrador visual.
-         * @param motion Referência ao controlador de movimento.
-         * @param audio Referência ao controlador de áudio.
+         * @brief Selects and triggers the next action from the pool.
+         * @param display Reference to the visual orchestrator.
+         * @param motion Reference to the motion controller.
+         * @param audio Reference to the audio controller.
          */
         void pickNextAction(
             DisplayOrchestrator& display,
@@ -185,9 +184,10 @@ class BehaviorEngine
         );
 
         /**
-         * @brief Finaliza a ação atual e entra no estado de repouso orgânico.
-         * @param display Referência ao orquestrador visual.
-         * @param motion Referência ao controlador de movimento.
+         * @brief Ends the current action and enters the organic rest
+         * state.
+         * @param display Reference to the visual orchestrator.
+         * @param motion Reference to the motion controller.
          */
         void enterRest(DisplayOrchestrator& display, MotionController& motion);
 };

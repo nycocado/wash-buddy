@@ -3,53 +3,53 @@
 
 /**
  * @class RinseState
- * @brief Etapa de enxágue das mãos.
+ * @brief Hand-rinsing stage.
  *
- * Ativado quando a criança aproxima a tag da Torneira (Faucet) após a etapa de
- * esfregação. Simula a remoção do sabão sob água corrente.
+ * Activated when the child brings the faucet tag close after the
+ * scrubbing stage. Simulates removing the soap under running water.
  *
- * Feedback Visual: Efeito de chuva forte (Heavy Rain).
- * Feedback Físico: O robô executa movimentos de 'mergulho' com os braços,
- * simulando a posição das mãos sob a água.
+ * Visual feedback: heavy rain effect.
+ * Physical feedback: the robot performs "dipping" arm movements,
+ * simulating the position of the hands under the water.
  */
 class RinseState : public State
 {
     public:
         /**
-         * @brief Ativa o efeito de chuva pesada e sonorização de enxágue.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Activates the heavy rain effect and the rinsing sound.
+         * @param controller Pointer to the central game controller.
          */
         void enter(GameController* controller) override;
 
         /**
-         * @brief Monitora o tempo de enxágue e transiciona para espera após
-         * conclusão.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Monitors the rinsing time and transitions to waiting once
+         * done.
+         * @param controller Pointer to the central game controller.
          */
         void update(GameController* controller) override;
 
         /**
-         * @brief Limpa animações e efeitos de enxágue.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Clears the rinsing animations and effects.
+         * @param controller Pointer to the central game controller.
          */
         void exit(GameController* controller) override;
 
         /**
-         * @brief Valida tags de torneira (repetir) ou toalha (avançar).
-         * @param controller Ponteiro para o controlador de jogo.
-         * @param uid Identificador da tag detectada.
+         * @brief Validates faucet (repeat) or towel (advance) tags.
+         * @param controller Pointer to the game controller.
+         * @param uid Identifier of the detected tag.
          */
         void handleRFID(GameController* controller, const String& uid) override;
 
         /**
-         * @brief Retorna o enum RobotState::RINSE.
-         * @return RobotState O estado de enxágue.
+         * @brief Returns the RobotState::RINSE enum.
+         * @return RobotState The rinsing state.
          */
         RobotState getStateEnum() const override { return RobotState::RINSE; }
 
         /**
-         * @brief Retorna o tempo pedagógico configurado para o enxágue.
-         * @return unsigned long Tempo em milissegundos.
+         * @brief Returns the pedagogical time configured for rinsing.
+         * @return unsigned long Time in milliseconds.
          */
         unsigned long getTimeout() const override
         {

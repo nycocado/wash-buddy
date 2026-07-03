@@ -12,17 +12,17 @@ static const std::vector<BehaviorVignette> ERROR_POOL = {BehaviorVignette(
     GameConfig::ERROR_DISPLAY_MS
 )};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void ErrorState::enter(GameController* controller)
 {
-    // Feedback sonoro de Erro (NO)
+    // Error sound feedback (NO)
     controller->getAudio().playFile(AudioFiles::ERROR);
 
-    // Expressão facial de dúvida/confusão
+    // Confused/doubtful facial expression
     controller->getDisplay().playConfused();
 
-    // Executa comportamento customizado via BehaviorEngine em loop único.
+    // Runs a custom behavior through BehaviorEngine in a single loop.
     controller->getBehaviors().setPool(ERROR_POOL, 0, 0, false);
 }
 
@@ -31,18 +31,19 @@ void ErrorState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void ErrorState::update(GameController* controller)
 {
-    // Após exibir o erro pelo tempo configurado, decide para onde retornar.
+    // After showing the error for the configured time, decides where to
+    // return.
     if (millis() - controller->getStateStartTime() >
         GameConfig::ERROR_DISPLAY_MS)
     {
         State* prev = controller->getPreviousState();
 
-        // Se o erro ocorreu durante o ritual, volta para WAITING para que a
-        // criança possa tentar novamente a etapa correta.
+        // If the error happened during the ritual, goes back to WAITING so
+        // the child can try the correct stage again.
         if (prev != nullptr && prev->getStateEnum() != RobotState::IDLE &&
             prev->getStateEnum() != RobotState::BOOT)
         {
@@ -50,12 +51,13 @@ void ErrorState::update(GameController* controller)
         }
         else
         {
-            // Se errou logo no início (Idle), volta para o repouso.
+            // If the mistake happened right at the start (Idle), returns
+            // to rest.
             controller->changeState(RobotState::IDLE);
         }
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void ErrorState::handleRFID(GameController* controller, const String& uid) {}

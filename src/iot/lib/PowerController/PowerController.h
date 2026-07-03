@@ -4,34 +4,34 @@
 
 /**
  * @class PowerController
- * @brief Gerencia a alimentação de periféricos e o estado de energia.
+ * @brief Manages peripheral power and the energy state.
  *
- * Responsável por acionar o MOSFET dos motores e sinalizar o desligamento
- * do sistema para preservação da bateria.
+ * Responsible for driving the motors' MOSFET and signaling the system
+ * shutdown to preserve the battery.
  */
 class PowerController
 {
     public:
         /**
-         * @brief Construtor do controlador.
-         * @param mosfetPin Pino de ativação dos motores.
-         * @param shutdownPin Pino de desligamento do sistema.
+         * @brief Controller constructor.
+         * @param mosfetPin Pin used to enable the motors.
+         * @param shutdownPin Pin used to shut down the system.
          */
         PowerController(uint8_t mosfetPin, uint8_t shutdownPin);
 
-        /** @brief Configura os pinos e ativa os motores por padrão. */
+        /** @brief Configures the pins and enables the motors by default. */
         void init();
 
-        /** @brief Ativa a alimentação dos servomotores. */
+        /** @brief Enables the servomotors' power supply. */
         void enableMotors();
 
-        /** @brief Corta a alimentação dos servomotores. */
+        /** @brief Cuts the servomotors' power supply. */
         void disableMotors();
 
-        /** @brief Sinaliza ao hardware para cortar a energia geral. */
+        /** @brief Signals the hardware to cut the main power. */
         void requestSystemShutdown();
 
     private:
-        uint8_t _mosfetPin;   ///< Pino de controle do MOSFET
-        uint8_t _shutdownPin; ///< Pino de sinal de desligamento
+        uint8_t _mosfetPin;   ///< MOSFET control pin
+        uint8_t _shutdownPin; ///< Shutdown signal pin
 };

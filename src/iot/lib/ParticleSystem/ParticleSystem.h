@@ -4,78 +4,76 @@
 #include "ConfettiParticle.h"
 #include "Particle.h"
 #include "RainParticle.h"
-#include "SparkleParticle.h"
 #include "WindParticle.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
 
 /**
- * @brief Tipos de efeitos visuais de partículas disponíveis.
+ * @brief Available particle visual effect types.
  */
 enum class EffectType
 {
-    NONE,       ///< Sem efeito
-    BUBBLES,    ///< Bolhas subindo
-    RAIN_LIGHT, ///< Chuva fina
-    RAIN_HEAVY, ///< Chuva forte
-    CONFETTI,   ///< Explosão de confetes
-    WIND,       ///< Linhas horizontais
-    SPARKLE     ///< Brilhos de sucesso
+    NONE,       ///< No effect
+    BUBBLES,    ///< Rising bubbles
+    RAIN_LIGHT, ///< Light rain
+    RAIN_HEAVY, ///< Heavy rain
+    CONFETTI,   ///< Confetti burst
+    WIND        ///< Horizontal streaks
 };
 
 /**
- * @brief Configurações globais do sistema de partículas.
+ * @brief Global settings for the particle system.
  */
 struct ParticleSystemConfig
 {
-        int activeLimit = 30;  ///< Limite máximo de partículas simultâneas
-        int spawnChance = 15;  ///< Probabilidade (0-100) de geração por frame
-        int screenWidth = 128; ///< Largura da área de spawn
-        int screenHeight = 64; ///< Altura da área de spawn
+        int activeLimit = 30;  ///< Maximum number of simultaneous particles
+        int spawnChance = 15;  ///< Spawn probability (0-100) per frame
+        int screenWidth = 128; ///< Width of the spawn area
+        int screenHeight = 64; ///< Height of the spawn area
 };
 
 /**
  * @class ParticleSystem
- * @brief Motor de efeitos especiais baseado em partículas.
+ * @brief Particle-based special effects engine.
  *
- * Gerencia o ciclo de vida de diversos tipos de partículas que decoram o
+ * Manages the lifecycle of the various particle types that decorate the
  * display.
  */
 class ParticleSystem
 {
     public:
         /**
-         * @brief Construtor do sistema.
-         * @param display Referência para a U8g2.
-         * @param config Definições globais de limites.
+         * @brief System constructor.
+         * @param display Reference to U8g2.
+         * @param config Global limit settings.
          */
         ParticleSystem(
             U8G2& display,
             const ParticleSystemConfig& config = ParticleSystemConfig()
         );
 
-        /** @brief Destrutor para limpeza de memória. */
+        /** @brief Destructor for memory cleanup. */
         ~ParticleSystem();
 
         /**
-         * @brief Altera o efeito atmosférico ativo.
-         * @param type Novo tipo de efeito.
+         * @brief Changes the active atmospheric effect.
+         * @param type New effect type.
          */
         void setEffect(EffectType type);
 
         /**
-         * @brief Atualiza a física e ciclo de vida de todas as partículas.
-         * @param deltaTime Tempo decorrido (segundos).
+         * @brief Updates the physics and lifecycle of every particle.
+         * @param deltaTime Time elapsed (seconds).
          */
         void update(float deltaTime);
 
-        /** @brief Renderiza todas as partículas ativas. */
+        /** @brief Renders every active particle. */
         void draw();
 
-        /** @brief Define a chance de geração de novas partículas. */
+        /** @brief Sets the spawn chance for new particles. */
         void setSpawnChance(int chance) { _config.spawnChance = chance; }
 
-        /** @brief Define o limite máximo de partículas vivas. */
+        /** @brief Sets the maximum number of live particles. */
         void setMaxParticles(int max)
         {
             _config.activeLimit = (max > MAX_PARTICLES) ? MAX_PARTICLES : max;
@@ -90,13 +88,12 @@ class ParticleSystem
 
         BubbleSettings _bubbleConfig;
         RainSettings _rainConfig;
-        SparkleSettings _sparkleConfig;
         ConfettiSettings _confettiConfig;
         WindSettings _windConfig;
 
-        /** @brief Instancia uma nova partícula no slot especificado. */
+        /** @brief Instantiates a new particle in the given slot. */
         void spawnParticle(int index);
 
-        /** @brief Remove e deleta todas as partículas. */
+        /** @brief Removes and deletes every particle. */
         void clearAll();
 };

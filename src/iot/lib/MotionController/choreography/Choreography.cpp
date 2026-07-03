@@ -1,7 +1,7 @@
 #include "Choreography.h"
 
 /**
- * @section Ciclo de Vida e Setup
+ * @section Lifecycle and Setup
  */
 
 ChoreoSequence::ChoreoSequence()
@@ -16,7 +16,7 @@ void ChoreoSequence::setFrames(const std::vector<ChoreoStep>& steps)
 }
 
 /**
- * @section Controle de Reprodução
+ * @section Playback Control
  */
 
 void ChoreoSequence::play(float startDelay, bool loop)
@@ -39,7 +39,7 @@ void ChoreoSequence::stop()
 }
 
 /**
- * @section Motor de Execução
+ * @section Execution Engine
  */
 
 const ChoreoStep* ChoreoSequence::update(float deltaTime)

@@ -12,16 +12,16 @@ static const std::vector<BehaviorVignette> BOOT_POOL = {BehaviorVignette(
     GameConfig::BOOT_DELAY_MS
 )};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void BootState::enter(GameController* controller)
 {
-    // O áudio será colocado em buffer e tocará assim que o hardware estiver
-    // pronto (~3.5s)
+    // The audio will be buffered and will play as soon as the hardware is
+    // ready (~3.5s)
     controller->getAudio().playFile(AudioFiles::BOOT);
 
-    // Centraliza todos os servos usando o motor de comportamentos para evitar
-    // trancos elétricos.
+    // Centers every servo through the behavior engine to avoid electrical
+    // jolts.
     controller->getBehaviors().setPool(BOOT_POOL, 0, 0, false);
 }
 
@@ -30,17 +30,17 @@ void BootState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void BootState::update(GameController* controller)
 {
-    // Aguarda o tempo configurado para garantir que o hardware estabilizou.
+    // Waits for the configured time to ensure the hardware has stabilized.
     if (millis() - controller->getStateStartTime() > GameConfig::BOOT_DELAY_MS)
     {
         controller->changeState(RobotState::IDLE);
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void BootState::handleRFID(GameController* controller, const String& uid) {}

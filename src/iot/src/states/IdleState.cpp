@@ -3,7 +3,7 @@
 #include "GameController.h"
 #include "assets/Images.h"
 
-// Define o Pool de Personalidade para o modo de repouso (Idle)
+// Defines the personality pool for the resting (Idle) mode
 static const std::vector<BehaviorVignette> IDLE_POOL = {
     BehaviorVignette(
         eEmotions::Focused,
@@ -12,7 +12,7 @@ static const std::vector<BehaviorVignette> IDLE_POOL = {
         ChoreoAction(ChoreographyLibrary::idlePanLook()),
         ChoreoAction(),
         ChoreoAction(),
-        6300 // Tempo total do idlePanLook
+        6300 // Total time of idlePanLook
     ),
     BehaviorVignette(
         eEmotions::Glee,
@@ -41,7 +41,7 @@ static const std::vector<BehaviorVignette> IDLE_POOL = {
         ChoreoAction(ChoreographyLibrary::lookSide(70)),
         ChoreoAction(),
         ChoreoAction(),
-        2000 // Tempo total do lookSide
+        2000 // Total time of lookSide
     ),
     BehaviorVignette(
         eEmotions::Surprised,
@@ -50,37 +50,37 @@ static const std::vector<BehaviorVignette> IDLE_POOL = {
         ChoreoAction(ChoreographyLibrary::lookSide(110)),
         ChoreoAction(),
         ChoreoAction(),
-        2000 // Tempo total do lookSide
-    )};
+        2000 // Total time of lookSide
+    )
+};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void IdleState::enter(GameController* controller)
 {
-    // Feedback sonoro de "Pronto", exceto se estiver voltando do WAITING
-    // (timeout) para não ser repetitivo.
+    // "Ready" sound feedback, unless coming back from WAITING (timeout) to
+    // avoid being repetitive.
     State* prev = controller->getPreviousState();
     if (prev == nullptr || prev->getStateEnum() != RobotState::WAITING)
     {
         controller->getAudio().playFile(AudioFiles::IDLE_READY);
-        // Animação inicial de felicidade (Glee inclui movimento de balanço)
+        // Initial happiness animation (Glee includes a swaying motion)
         controller->getDisplay().setEyeMood(eEmotions::Glee);
     }
 
-    // --- CONFIGURAÇÃO DE PERSONALIDADE ---
-    // Configura o pool com PAUSAS NATURAIS longas (8s a 15s) e ativa o reset
-    // visual para que o robô volte ao neutro entre as vinhetas.
+    // --- PERSONALITY SETUP ---
+    // Sets up the pool with long NATURAL PAUSES (8s to 15s) and enables the
+    // visual reset so the robot returns to neutral between vignettes.
     controller->getBehaviors().setPool(
         IDLE_POOL,
         GameConfig::IDLE_MIN_PAUSE_MS,
         GameConfig::IDLE_MAX_PAUSE_MS,
-        true, // Loop ativado
-        true  // ResetOnRest ativado para o modo Idle
+        true, // Loop enabled
+        true  // ResetOnRest enabled for the Idle mode
     );
 
-    // Primeiro lembrete visual após o atraso inicial configurado.
+    // First visual reminder after the configured initial delay.
     _lastReminderTime = millis() + GameConfig::IDLE_INITIAL_DELAY_MS;
-    _isPreparingReminder = false;
 }
 
 void IdleState::exit(GameController* controller)
@@ -88,7 +88,7 @@ void IdleState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void IdleState::update(GameController* controller)
 {
@@ -96,39 +96,40 @@ void IdleState::update(GameController* controller)
     BehaviorEngine& behaviors = controller->getBehaviors();
     unsigned long now = millis();
 
-    // --- TIMEOUT PARA ECONOMIA DE ENERGIA ---
-    // Se ninguém interagir com o robô pelo tempo de IDLE_TIMEOUT, ele se
-    // desliga.
+    // --- TIMEOUT FOR POWER SAVING ---
+    // If nobody interacts with the robot for IDLE_TIMEOUT, it shuts down.
     if (now - controller->getStateStartTime() > GameConfig::IDLE_TIMEOUT_MS)
     {
         controller->shutdownSystem();
         return;
     }
 
-    // Se houver uma instrução na tela, pausamos a lógica de lembrete.
+    // If there's an instruction on screen, pause the reminder logic.
     if (display.isInstructionActive())
     {
         return;
     }
 
-    // LÓGICA DE LEMBRETE ORGÂNICA:
-    // Só disparar a instrução se o tempo chegou e o robô está em repouso.
+    // ORGANIC REMINDER LOGIC:
+    // Only trigger the instruction if the time has come and the robot is
+    // at rest.
     if (now > _lastReminderTime && !behaviors.isInAction())
     {
-        // Feedback sonoro do lembrete (BEW-WOO BEW-WOO)
+        // Reminder sound feedback (BEW-WOO BEW-WOO)
         controller->getAudio().playFile(AudioFiles::IDLE_REMINDER);
 
-        // O efeito "Zipper" do orquestrador cuidará da transição visual suave.
+        // The orchestrator's "Zipper" effect will handle the smooth visual
+        // transition.
         display.showInstruction(
             Assets::ICON_FAUCET, GameConfig::INSTRUCTION_DISPLAY_MS
         );
 
-        // Agenda o próximo lembrete no intervalo configurado.
+        // Schedules the next reminder at the configured interval.
         _lastReminderTime = now + GameConfig::IDLE_REMINDER_INTERVAL_MS;
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void IdleState::handleRFID(GameController* controller, const String& uid)
 {
@@ -138,7 +139,7 @@ void IdleState::handleRFID(GameController* controller, const String& uid)
     }
     else
     {
-        // Qualquer outra tag no IDLE é tratada como erro de sequência.
+        // Any other tag while in IDLE is treated as a sequence error.
         controller->changeState(RobotState::ERROR);
     }
 }

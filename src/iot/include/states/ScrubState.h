@@ -3,54 +3,55 @@
 
 /**
  * @class ScrubState
- * @brief Etapa ativa de esfregação das mãos.
+ * @brief Active hand-scrubbing stage.
  *
- * Esta é a fase central do ritual, ativada após a aplicação do sabão.
- * O robô incentiva a criança a esfregar as mãos pelo tempo recomendado pelas
- * autoridades de saúde.
+ * This is the central stage of the ritual, activated after applying soap.
+ * The robot encourages the child to scrub their hands for the time
+ * recommended by health authorities.
  *
- * Feedback Visual: Manutenção das bolhas no display.
- * Feedback Físico: Coreografia rítmica de esfregação com ambos os braços.
+ * Visual feedback: bubbles kept on screen.
+ * Physical feedback: rhythmic scrubbing choreography with both arms.
  */
 class ScrubState : public State
 {
     public:
         /**
-         * @brief Inicia a coreografia de esfregação e sonorização rítmica.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Starts the scrubbing choreography and the rhythmic sound.
+         * @param controller Pointer to the central game controller.
          */
         void enter(GameController* controller) override;
 
         /**
-         * @brief Monitora o tempo obrigatório de higiene e transiciona para
-         * espera.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Monitors the mandatory hygiene time and transitions to
+         * waiting.
+         * @param controller Pointer to the central game controller.
          */
         void update(GameController* controller) override;
 
         /**
-         * @brief Para as animações de esfregação.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Stops the scrubbing animations.
+         * @param controller Pointer to the central game controller.
          */
         void exit(GameController* controller) override;
 
         /**
-         * @brief Valida se a criança continua a esfregação ou avança para o
-         * enxágue.
-         * @param controller Ponteiro para o controlador de jogo.
-         * @param uid Identificador da tag detectada.
+         * @brief Validates whether the child keeps scrubbing or advances
+         * to rinsing.
+         * @param controller Pointer to the game controller.
+         * @param uid Identifier of the detected tag.
          */
         void handleRFID(GameController* controller, const String& uid) override;
 
         /**
-         * @brief Retorna o enum RobotState::SCRUB.
-         * @return RobotState O estado de esfregação.
+         * @brief Returns the RobotState::SCRUB enum.
+         * @return RobotState The scrubbing state.
          */
         RobotState getStateEnum() const override { return RobotState::SCRUB; }
 
         /**
-         * @brief Retorna o tempo pedagógico (OMS) para esfregação eficiente.
-         * @return unsigned long Tempo em milissegundos.
+         * @brief Returns the pedagogical (WHO) time for effective
+         * scrubbing.
+         * @return unsigned long Time in milliseconds.
          */
         unsigned long getTimeout() const override
         {

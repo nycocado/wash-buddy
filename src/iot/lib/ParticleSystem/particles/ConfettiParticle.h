@@ -4,30 +4,31 @@
 
 /**
  * @struct ConfettiSettings
- * @brief Configurações físicas para o efeito de Confete.
+ * @brief Physical settings for the confetti effect.
  */
 struct ConfettiSettings
 {
-        float minSpeed = 40.0f;      ///< Velocidade inicial mínima (px/s).
-        float maxSpeed = 100.0f;     ///< Velocidade inicial máxima (px/s).
-        float gravity = 30.0f;       ///< Gravidade aplicada (px/s^2).
-        float airResistance = 0.98f; ///< Fator de resistência do ar.
+        float minSpeed = 40.0f;      ///< Minimum initial speed (px/s).
+        float maxSpeed = 100.0f;     ///< Maximum initial speed (px/s).
+        float gravity = 30.0f;       ///< Applied gravity (px/s^2).
+        float airResistance = 0.98f; ///< Air resistance factor.
 };
 
 /**
  * @class ConfettiParticle
- * @brief Partícula de confete com física de projétil e rotação.
+ * @brief Confetti particle with projectile physics and rotation.
  *
- * Simula a queda irregular de papéis coloridos com rotação 3D simplificada.
+ * Simulates colored paper pieces falling erratically with simplified 3D
+ * rotation.
  */
 class ConfettiParticle : public Particle
 {
     public:
         /**
-         * @brief Construtor do confete.
-         * @param startX Posição X de lançamento.
-         * @param startY Posição Y de lançamento.
-         * @param cfg Configurações de física.
+         * @brief Confetti constructor.
+         * @param startX Launch X position.
+         * @param startY Launch Y position.
+         * @param cfg Physics settings.
          */
         ConfettiParticle(
             float startX,
@@ -36,16 +37,16 @@ class ConfettiParticle : public Particle
         );
 
         /**
-         * @brief Atualiza trajetória e rotação visual.
-         * @param deltaTime Tempo decorrido (segundos).
-         * @param screenWidth Largura da tela.
-         * @param screenHeight Altura da tela.
-         * @return True se a partícula ainda está visível.
+         * @brief Updates the trajectory and visual rotation.
+         * @param deltaTime Time elapsed (seconds).
+         * @param screenWidth Screen width.
+         * @param screenHeight Screen height.
+         * @return True if the particle is still visible.
          */
         bool
         update(float deltaTime, int screenWidth, int screenHeight) override;
 
-        /** @brief Renderiza o confete com efeito de rotação. */
+        /** @brief Renders the confetti with the rotation effect. */
         void draw(U8G2& display) override;
 
     private:

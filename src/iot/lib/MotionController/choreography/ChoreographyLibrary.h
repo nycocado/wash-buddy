@@ -5,21 +5,18 @@
 
 /**
  * @class ChoreographyLibrary
- * @brief Coleção de coreografias de movimento pré-definidas.
+ * @brief Collection of pre-defined movement choreographies.
  */
 class ChoreographyLibrary
 {
     public:
-        // --- CABEÇA ---
+        // --- HEAD ---
 
         static std::vector<ChoreoStep> shakeHeadError()
         {
             return {
-                {80, 0.25f},
-                {100, 0.25f},
-                {80, 0.25f},
-                {100, 0.25f},
-                {90, 0.5f}};
+                {80, 0.25f}, {100, 0.25f}, {80, 0.25f}, {100, 0.25f}, {90, 0.5f}
+            };
         }
 
         static std::vector<ChoreoStep> idlePanLook()
@@ -32,7 +29,7 @@ class ChoreographyLibrary
             return {{angle, 1.2f}, {90, 0.8f}};
         }
 
-        // --- BRAÇOS ---
+        // --- ARMS ---
 
         static std::vector<ChoreoStep> waveHand()
         {
@@ -42,7 +39,8 @@ class ChoreographyLibrary
         static std::vector<ChoreoStep> celebrateVictory()
         {
             return {
-                {110, 0.2f}, {70, 0.2f}, {110, 0.2f}, {70, 0.2f}, {90, 0.4f}};
+                {110, 0.2f}, {70, 0.2f}, {110, 0.2f}, {70, 0.2f}, {90, 0.4f}
+            };
         }
 
         static std::vector<ChoreoStep> scrubArm()
@@ -58,7 +56,8 @@ class ChoreographyLibrary
                 {15, 0.2f},
                 {25, 0.2f},
                 {15, 0.2f},
-                {20, 0.5f}};
+                {20, 0.5f}
+            };
         }
 
         static std::vector<ChoreoStep> soapSlide()
@@ -69,10 +68,7 @@ class ChoreographyLibrary
         static std::vector<ChoreoStep> dryFanHead()
         {
             return {
-                {120, 0.2f},
-                {140, 0.2f},
-                {125, 0.1f},
-                {135, 0.1f},
-                {130, 0.3f}};
+                {120, 0.2f}, {140, 0.2f}, {125, 0.1f}, {135, 0.1f}, {130, 0.3f}
+            };
         }
 };

@@ -35,7 +35,8 @@ void MotionController::init()
 {
     _initStage = 0;
     _lastInitTime = millis();
-    Serial.println(F("[MotionController] Aguardando acionamento em cascata...")
+    Serial.println(
+        F("[MotionController] Aguardando acionamento em cascata...")
     );
 }
 
@@ -102,10 +103,10 @@ bool MotionController::updateAxisPhysics(
 
     if (axis.isMoving)
     {
-        // Precisamos do token de inicialização apenas se estamos assumindo
-        // inércia inicial pesada, mas em movimentos contínuos não bloqueamos
-        // por token. Aqui mantemos a estrutura de token para não dar picos
-        // elétricos.
+        // We only need the initiation token if we're assuming heavy
+        // initial inertia; in continuous movements we don't block on the
+        // token. We keep the token structure here to avoid electrical
+        // spikes.
         if (axis.elapsedTime == 0.0f && !initiationTokenUsed)
         {
             tokenConsumed = true;
@@ -117,7 +118,7 @@ bool MotionController::updateAxisPhysics(
 
         if (axis.moveDuration <= 0.001f)
         {
-            // Movimento instantâneo (Teleporte)
+            // Instant movement (teleport)
             axis.currentAngle = axis.targetAngle;
             axis.isMoving = false;
         }
@@ -145,14 +146,18 @@ bool MotionController::updateAxisPhysics(
     return tokenConsumed;
 }
 
-float MotionController::easeSmoothStep(float start, float target, float progress)
+float MotionController::easeSmoothStep(
+    float start,
+    float target,
+    float progress
+)
 {
     if (progress <= 0.0f)
         return start;
     if (progress >= 1.0f)
         return target;
 
-    // Smoothstep (Ease-in / Ease-out)
+    // Smoothstep (ease-in / ease-out)
     // f(t) = t^2 * (3 - 2t)
     float smoothProgress = progress * progress * (3.0f - 2.0f * progress);
 

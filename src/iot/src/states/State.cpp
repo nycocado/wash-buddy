@@ -1,7 +1,7 @@
 #include "states/State.h"
 #include "GameController.h"
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void State::validateRFID(
     GameController* controller,
@@ -11,22 +11,23 @@ void State::validateRFID(
     RobotState nextState
 )
 {
-    // CASO 1: A tag lida é a mesma que iniciou o estado atual.
-    // Isso é interpretado como uma tentativa de repetir ou reiniciar a etapa
-    // atual.
+    // CASE 1: the tag that was read is the same one that started the
+    // current state. This is interpreted as an attempt to repeat or restart
+    // the current stage.
     if (uid == currentTag)
     {
         controller->handleRepeat();
     }
-    // CASO 2: A tag lida é a tag esperada para a PRÓXIMA etapa do ritual.
-    // Permite que o ritual avance para o próximo estado lógico.
+    // CASE 2: the tag that was read is the expected tag for the NEXT stage
+    // of the ritual. Allows the ritual to advance to the next logical
+    // state.
     else if (nextTag != nullptr && uid == nextTag)
     {
         controller->changeState(nextState);
     }
-    // CASO 3: Qualquer outra tag foi lida (ordem incorreta ou tag
-    // desconhecida). Transiciona para o estado de erro, indicando que a criança
-    // deve prestar atenção.
+    // CASE 3: any other tag was read (wrong order or unknown tag).
+    // Transitions to the error state, indicating the child should pay
+    // attention.
     else
     {
         controller->changeState(RobotState::ERROR);

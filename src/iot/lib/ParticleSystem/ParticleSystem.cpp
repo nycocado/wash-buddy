@@ -1,7 +1,7 @@
 #include "ParticleSystem.h"
 
 /**
- * @section Ciclo de Vida
+ * @section Lifecycle
  */
 
 ParticleSystem::ParticleSystem(
@@ -10,7 +10,7 @@ ParticleSystem::ParticleSystem(
 )
     : _display(display), _config(config), _currentEffect(EffectType::NONE)
 {
-    // Inicializa todos os slots de partículas como vazios
+    // Initializes every particle slot as empty
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
         _particles[i] = nullptr;
@@ -20,7 +20,7 @@ ParticleSystem::ParticleSystem(
 ParticleSystem::~ParticleSystem() { clearAll(); }
 
 /**
- * @section Gestão de Efeitos
+ * @section Effect Management
  */
 
 void ParticleSystem::setEffect(EffectType type) { _currentEffect = type; }
@@ -29,7 +29,7 @@ void ParticleSystem::update(float deltaTime)
 {
     int activeCount = 0;
 
-    // Primeiro pass: conta quantas partículas estão vivas no momento
+    // First pass: counts how many particles are currently alive
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
         if (_particles[i] != nullptr)
@@ -38,13 +38,14 @@ void ParticleSystem::update(float deltaTime)
         }
     }
 
-    // Segundo pass: atualiza partículas existentes e cria novas se necessário
+    // Second pass: updates existing particles and spawns new ones if
+    // needed
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
         if (_particles[i] == nullptr)
         {
-            // Se o slot está vazio, tenta criar uma nova partícula baseada na
-            // chance de spawn
+            // If the slot is empty, tries to spawn a new particle based on
+            // the spawn chance
             if (_currentEffect != EffectType::NONE &&
                 activeCount < _config.activeLimit)
             {
@@ -57,8 +58,8 @@ void ParticleSystem::update(float deltaTime)
             continue;
         }
 
-        // Atualiza a física da partícula. Se retornar false, ela morreu (saiu
-        // da tela ou estourou)
+        // Updates the particle's physics. If it returns false, it died
+        // (left the screen or popped)
         if (!_particles[i]->update(
                 deltaTime, _config.screenWidth, _config.screenHeight
             ))
@@ -72,7 +73,7 @@ void ParticleSystem::update(float deltaTime)
 
 void ParticleSystem::draw()
 {
-    // Renderiza cada partícula ativa usando o buffer único do display
+    // Renders each active particle using the display's single buffer
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
         if (_particles[i] != nullptr)
@@ -83,22 +84,22 @@ void ParticleSystem::draw()
 }
 
 /**
- * @section Lógica Interna e Memória
+ * @section Internal Logic and Memory
  */
 
 void ParticleSystem::spawnParticle(int i)
 {
-    // Proteção para não sobrescrever uma partícula ativa no slot
+    // Guard to avoid overwriting an active particle in the slot
     if (_particles[i] != nullptr)
     {
         return;
     }
 
-    // A maioria das partículas nasce em uma posição X aleatória no topo ou base
+    // Most particles are born at a random X position at the top or bottom
     float startX = (float)random(0, _config.screenWidth);
 
-    // --- FÁBRICA DE PARTÍCULAS ---
-    // Instancia o tipo de partícula correspondente ao efeito ativo.
+    // --- PARTICLE FACTORY ---
+    // Instantiates the particle type matching the active effect.
     switch (_currentEffect)
     {
         case EffectType::BUBBLES:
@@ -128,12 +129,6 @@ void ParticleSystem::spawnParticle(int i)
             );
             break;
 
-        case EffectType::SPARKLE:
-            _particles[i] = new SparkleParticle(
-                startX, (float)_config.screenHeight, _sparkleConfig
-            );
-            break;
-
         default:
             break;
     }
@@ -141,8 +136,8 @@ void ParticleSystem::spawnParticle(int i)
 
 void ParticleSystem::clearAll()
 {
-    // Limpeza rigorosa de memória para evitar leaks ao mudar de estado ou
-    // desligar
+    // Rigorous memory cleanup to avoid leaks when changing state or
+    // shutting down
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
         if (_particles[i] != nullptr)

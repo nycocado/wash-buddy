@@ -3,9 +3,9 @@
 #include "GameController.h"
 #include "assets/Images.h"
 
-// Pools de Comportamento para o estado de Espera
+// Behavior pools for the waiting state
 static const std::vector<BehaviorVignette> WAITING_WORRIED_POOL = {
-    // Procura para a direita
+    // Looks to the right
     BehaviorVignette(
         eEmotions::Worried,
         0.7f,
@@ -15,7 +15,7 @@ static const std::vector<BehaviorVignette> WAITING_WORRIED_POOL = {
         ChoreoAction(),
         3000
     ),
-    // Procura para a esquerda
+    // Looks to the left
     BehaviorVignette(
         eEmotions::Worried,
         -0.7f,
@@ -25,7 +25,7 @@ static const std::vector<BehaviorVignette> WAITING_WORRIED_POOL = {
         ChoreoAction(),
         3000
     ),
-    // Foca na frente
+    // Focuses ahead
     BehaviorVignette(
         eEmotions::Worried,
         0.0f,
@@ -34,10 +34,11 @@ static const std::vector<BehaviorVignette> WAITING_WORRIED_POOL = {
         ChoreoAction(),
         ChoreoAction(),
         6300
-    )};
+    )
+};
 
 static const std::vector<BehaviorVignette> WAITING_SAD_POOL = {
-    // Triste olhando para baixo
+    // Sad, looking down
     BehaviorVignette(
         eEmotions::Sad,
         0.0f,
@@ -47,7 +48,7 @@ static const std::vector<BehaviorVignette> WAITING_SAD_POOL = {
         ChoreoAction(),
         4000
     ),
-    // Triste olhando um pouco para o lado
+    // Sad, looking slightly to the side
     BehaviorVignette(
         eEmotions::Sad,
         0.3f,
@@ -56,9 +57,10 @@ static const std::vector<BehaviorVignette> WAITING_SAD_POOL = {
         ChoreoAction(),
         ChoreoAction(),
         4000
-    )};
+    )
+};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void WaitingState::enter(GameController* controller)
 {
@@ -67,8 +69,9 @@ void WaitingState::enter(GameController* controller)
     _waitingAudioPlayed = false;
     _sadAudioPlayed = false;
 
-    // --- INSTRUÇÃO VISUAL ---
-    // Determina qual ícone de instrução mostrar baseado no progresso do ritual.
+    // --- VISUAL INSTRUCTION ---
+    // Determines which instruction icon to show based on the ritual's
+    // progress.
     RobotState lastRitual = controller->getLastRitualState();
     _nextIcon = nullptr;
 
@@ -89,7 +92,8 @@ void WaitingState::enter(GameController* controller)
     }
     else
     {
-        // Se não há ícone pendente, o áudio já pode tocar (ex: erro no início)
+        // If there's no pending icon, the audio can already play (e.g.
+        // error right at the start)
         _waitingAudioPlayed = true;
         controller->getAudio().playFile(AudioFiles::WAITING_START);
     }
@@ -100,32 +104,32 @@ void WaitingState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void WaitingState::update(GameController* controller)
 {
     DisplayOrchestrator& display = controller->getDisplay();
     unsigned long elapsed = millis() - controller->getStateStartTime();
 
-    // --- GATILHO DE ÁUDIO SINCRONIZADO ---
-    // O áudio inicial (ZWEE?) só toca quando a carinha (olhos) volta a
-    // aparecer, ou seja, quando o ícone de instrução inicial desaparece.
+    // --- SYNCHRONIZED AUDIO TRIGGER ---
+    // The initial audio only plays once the face (eyes) reappears, i.e.
+    // once the initial instruction icon disappears.
     if (!_waitingAudioPlayed && !display.isInstructionActive())
     {
         controller->getAudio().playFile(AudioFiles::WAITING_START);
         _waitingAudioPlayed = true;
     }
 
-    // --- LÓGICA DE EXPIRAÇÃO (TIMEOUT) ---
+    // --- EXPIRATION LOGIC (TIMEOUT) ---
     if (elapsed > GameConfig::WAITING_TIMEOUT_MS)
     {
-        // Feedback sonoro de "desistência" (OOOOOOOOOOOOOO...)
+        // "Giving up" sound feedback
         controller->getAudio().playFile(AudioFiles::WAITING_OFF);
         controller->shutdownSystem();
         return;
     }
 
-    // --- LEMBRETE VISUAL DA PRÓXIMA ETAPA ---
+    // --- VISUAL REMINDER OF THE NEXT STAGE ---
     unsigned long now = millis();
     if (_nextIcon != nullptr &&
         now - _lastReminderTime > GameConfig::WAITING_REMINDER_INTERVAL_MS)
@@ -135,7 +139,7 @@ void WaitingState::update(GameController* controller)
         _lastReminderTime = now;
     }
 
-    // --- EVOLUÇÃO DA IMPACIÊNCIA ---
+    // --- IMPATIENCE EVOLUTION ---
     if (!_isWorriedPhase && elapsed > 5000)
     {
         _isWorriedPhase = true;
@@ -150,37 +154,38 @@ void WaitingState::update(GameController* controller)
 
     if (_isSadPhase && !_sadAudioPlayed && !display.isInstructionActive())
     {
-        // Feedback sonoro de tristeza (W-W-WOOOOO..?)
+        // Sad sound feedback
         controller->getAudio().playFile(AudioFiles::WAITING_15S);
         _sadAudioPlayed = true;
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void WaitingState::handleRFID(GameController* controller, const String& uid)
 {
-    // Recupera onde o ritual parou para saber qual a próxima tag válida
+    // Retrieves where the ritual stopped to know which is the next valid
+    // tag
     RobotState lastRitual = controller->getLastRitualState();
 
-    // Segurança: se não houve ritual ainda, volta para o IDLE
+    // Safety: if no ritual has started yet, return to IDLE
     if (lastRitual == RobotState::BOOT || lastRitual == RobotState::IDLE)
     {
         controller->changeState(RobotState::IDLE);
         return;
     }
 
-    // Lógica de transição baseada na última etapa concluída
-    if (lastRitual == RobotState::WET) // Parou em: Molhar as mãos
+    // Transition logic based on the last completed stage
+    if (lastRitual == RobotState::WET) // Stopped at: wetting the hands
     {
         if (uid == RFIDTags::FAUCET)
-            controller->changeState(RobotState::WET); // Repetir
+            controller->changeState(RobotState::WET); // Repeat
         else if (uid == RFIDTags::SOAP)
-            controller->changeState(RobotState::SOAP); // Avançar para Sabão
+            controller->changeState(RobotState::SOAP); // Advance to soap
         else
             controller->changeState(RobotState::ERROR);
     }
-    else if (lastRitual == RobotState::SOAP) // Parou em: Passar sabão
+    else if (lastRitual == RobotState::SOAP) // Stopped at: applying soap
     {
         if (uid == RFIDTags::SOAP)
             controller->changeState(RobotState::SOAP);
@@ -189,7 +194,7 @@ void WaitingState::handleRFID(GameController* controller, const String& uid)
         else
             controller->changeState(RobotState::ERROR);
     }
-    else if (lastRitual == RobotState::SCRUB) // Parou em: Esfregar
+    else if (lastRitual == RobotState::SCRUB) // Stopped at: scrubbing
     {
         if (uid == RFIDTags::SCRUB)
             controller->changeState(RobotState::SCRUB);
@@ -198,7 +203,7 @@ void WaitingState::handleRFID(GameController* controller, const String& uid)
         else
             controller->changeState(RobotState::ERROR);
     }
-    else if (lastRitual == RobotState::RINSE) // Parou em: Enxaguar
+    else if (lastRitual == RobotState::RINSE) // Stopped at: rinsing
     {
         if (uid == RFIDTags::FAUCET)
             controller->changeState(RobotState::RINSE);

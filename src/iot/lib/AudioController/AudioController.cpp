@@ -1,9 +1,9 @@
 #include "AudioController.h"
 
-/** @section Ciclo de Vida e Inicialização */
+/** @section Lifecycle and Initialization */
 
 /**
- * @brief Construtor da classe de controle de áudio.
+ * @brief Constructor for the audio control class.
  */
 AudioController::AudioController(
     HardwareSerial& serial,
@@ -20,20 +20,21 @@ AudioController::AudioController(
 }
 
 /**
- * @brief Configuração inicial de hardware e comunicação.
+ * @brief Initial hardware and communication setup.
  *
- * Inicia a porta Serial2 mas não bloqueia a execução esperando o hardware.
+ * Starts the Serial2 port but does not block execution waiting for the
+ * hardware.
  */
 void AudioController::init()
 {
-    // Prepara o pino do potenciômetro para leitura analógica
+    // Prepares the potentiometer pin for analog reading
     pinMode(_potPin, INPUT);
 
-    // Inicializa a HardwareSerial com o baud rate padrão do DFPlayer Pro
-    // (115200)
+    // Initializes the HardwareSerial with the DFPlayer Pro's default baud
+    // rate (115200)
     _serial.begin(115200, SERIAL_8N1, _rxPin, _txPin);
 
-    // Inicia a contagem de tempo para a máquina de estados assíncrona
+    // Starts the timer for the asynchronous state machine
     _bootTimestamp = millis();
     _status = InitStatus::WAKING_UP;
 
@@ -43,15 +44,14 @@ void AudioController::init()
 }
 
 /**
- * @brief Atualização periódica do subsistema de áudio.
+ * @brief Periodic update of the audio subsystem.
  *
- * Gerencia a máquina de estados de inicialização resiliente e a leitura do
- * potenciômetro de volume com controle de cadência.
+ * Manages the resilient initialization state machine and reads the
+ * volume potentiometer with cadence control.
  */
 void AudioController::update()
 {
-    // Enquanto não estiver pronto, processa exclusivamente a sequência de
-    // inicialização
+    // While not ready, exclusively processes the initialization sequence
     if (_status != InitStatus::READY)
     {
         handleInitialization();
@@ -60,26 +60,22 @@ void AudioController::update()
 
     unsigned long now = millis();
 
-    // Processamento do volume via potenciômetro com controle de cadência
+    // Volume processing via the potentiometer, with cadence control
     if (now - _lastUpdate > _settings.updateIntervalMs)
     {
         _lastUpdate = now;
         processVolumePot();
     }
 
-    // --- PROCESSAMENTO DE COMANDOS (Thread-Safe) ---
-    // Executamos apenas um comando de hardware por ciclo de update para evitar
-    // saturação do barramento serial.
+    // --- COMMAND PROCESSING (thread-safe) ---
+    // We execute only one hardware command per update cycle to avoid
+    // saturating the serial bus.
     if (_nextCommand != AudioCommand::NONE)
     {
         switch (_nextCommand)
         {
             case AudioCommand::PLAY_FILE:
                 _df1201s.setPlayMode(DFRobot_DF1201S::SINGLE);
-                _df1201s.playFileNum(_commandArg);
-                break;
-            case AudioCommand::PLAY_LOOP:
-                _df1201s.setPlayMode(DFRobot_DF1201S::SINGLECYCLE);
                 _df1201s.playFileNum(_commandArg);
                 break;
             case AudioCommand::STOP:
@@ -94,21 +90,22 @@ void AudioController::update()
         }
         _nextCommand = AudioCommand::NONE;
         _wasPlayingLastCheck = true;
-        return; // Sai para dar tempo ao hardware de processar antes do
+        return; // Exits to give the hardware time to process before
                 // isPlaying()
     }
 
-    // Lógica de sequência de áudio (Playlist)
+    // Audio sequence (playlist) logic
     if (_sequenceTracks != nullptr)
     {
-        // Checamos isPlaying apenas a cada 300ms para não travar a porta serial
+        // We only check isPlaying every 300ms to avoid stalling the
+        // serial port
         if (now - _lastSequenceCheck > 300)
         {
             _lastSequenceCheck = now;
             bool isPlayingNow = _df1201s.isPlaying();
 
-            // Se estava tocando e agora não está mais, passou para a próxima
-            // faixa
+            // If it was playing and now isn't, it moved on to the next
+            // track
             if (_wasPlayingLastCheck && !isPlayingNow)
             {
                 _sequenceIndex++;
@@ -121,7 +118,8 @@ void AudioController::update()
                 {
                     if (_sequenceCurrentLoop < _sequenceMaxLoops)
                     {
-                        // Incrementa o contador de loops e reinicia a playlist
+                        // Increments the loop counter and restarts the
+                        // playlist
                         _sequenceCurrentLoop++;
                         _sequenceIndex = 0;
                         _df1201s.playFileNum(_sequenceTracks[0].id);
@@ -129,7 +127,7 @@ void AudioController::update()
                     }
                     else
                     {
-                        _sequenceTracks = nullptr; // Fim da playlist
+                        _sequenceTracks = nullptr; // End of playlist
                     }
                 }
             }
@@ -142,9 +140,9 @@ void AudioController::update()
 }
 
 /**
- * @section Lógica de Inicialização Resiliente
- * Segue o protocolo sugerido pelo fabricante: Power-on -> Handshake -> Mode
- * Switch -> Ready.
+ * @section Resilient Initialization Logic
+ * Follows the manufacturer-suggested protocol: power-on -> handshake ->
+ * mode switch -> ready.
  */
 void AudioController::handleInitialization()
 {
@@ -153,9 +151,9 @@ void AudioController::handleInitialization()
     switch (_status)
     {
         case InitStatus::WAKING_UP:
-            // Aguarda 1000ms para estabilização elétrica total do módulo.
-            // Impede o envio de comandos para um hardware que ainda está em
-            // reset.
+            // Waits 1000ms for the module's full electrical
+            // stabilization. Prevents sending commands to hardware that's
+            // still resetting.
             if (now - _bootTimestamp > 1000)
             {
                 _status = InitStatus::CONNECTING;
@@ -164,37 +162,40 @@ void AudioController::handleInitialization()
             break;
 
         case InitStatus::CONNECTING:
-            // Tenta o handshake serial via biblioteca DFRobot a cada 500ms
+            // Attempts the serial handshake via the DFRobot library every
+            // 500ms
             if (now - _lastAttemptTime > 500)
             {
                 _lastAttemptTime = now;
                 if (_df1201s.begin(_serial))
                 {
-                    // Conexão física estabelecida. Próximo passo: Configuração
-                    // de modo.
+                    // Physical connection established. Next step: mode
+                    // configuration.
                     _status = InitStatus::SETTING_MODE;
-                    Serial.println(F("[AUDIO] Serial sincronizada. "
-                                     "Configurando modo MUSIC..."));
+                    Serial.println(
+                        F("[AUDIO] Serial sincronizada. "
+                          "Configurando modo MUSIC...")
+                    );
 
-                    // Garante que o player está no modo música e silencia
-                    // avisos de voz ("Music")
+                    // Ensures the player is in music mode and silences
+                    // voice prompts ("Music")
                     _df1201s.switchFunction(_df1201s.MUSIC);
                     _df1201s.setPrompt(false);
 
-                    // Reinicia o timer para a espera obrigatória pós-troca de
-                    // modo (2s)
+                    // Restarts the timer for the mandatory post-mode-switch
+                    // wait (2s)
                     _lastAttemptTime = now;
                 }
             }
             break;
 
         case InitStatus::SETTING_MODE:
-            // O DFPlayer Pro necessita de até 2 segundos após a troca de função
-            // para processar a leitura do cartão SD/Flash e finalizar sons de
-            // prompt.
+            // The DFPlayer Pro needs up to 2 seconds after the function
+            // switch to process reading the SD/Flash card and finish its
+            // prompt sounds.
             if (now - _lastAttemptTime > 2000)
             {
-                // Configuração final de reprodução e volume
+                // Final playback and volume configuration
                 _df1201s.setPlayMode(DFRobot_DF1201S::SINGLE);
                 _df1201s.setVol(_settings.defaultVolume);
                 _currentVolume = _settings.defaultVolume;
@@ -204,14 +205,15 @@ void AudioController::handleInitialization()
                     F("[AUDIO] Subsistema de áudio totalmente pronto!")
                 );
 
-                // Se houve solicitação de áudio durante o período de boot,
-                // executa agora
+                // If an audio request came in during the boot period,
+                // executes it now
                 if (_hasPendingFile)
                 {
-                    Serial.print(F("[AUDIO] Executando track pendente do boot: "
-                    ));
+                    Serial.print(
+                        F("[AUDIO] Executando track pendente do boot: ")
+                    );
                     Serial.println(_pendingFile);
-                    // Usamos o sistema de comando assíncrono aqui também
+                    // We use the asynchronous command system here as well
                     _nextCommand = AudioCommand::PLAY_FILE;
                     _commandArg = _pendingFile;
                     _hasPendingFile = false;
@@ -224,14 +226,14 @@ void AudioController::handleInitialization()
     }
 }
 
-/** @section Comandos de Áudio */
+/** @section Audio Commands */
 
 /**
- * @brief Toca um arquivo de áudio. Suporta comandos pendentes durante o boot.
+ * @brief Plays an audio file. Supports pending commands during boot.
  */
 void AudioController::playFile(const AudioTrack& track)
 {
-    // Cancela qualquer sequência ativa e limpa comando de Stop pendente
+    // Cancels any active sequence and clears a pending stop command
     _sequenceTracks = nullptr;
     _nextCommand = AudioCommand::NONE;
 
@@ -247,7 +249,7 @@ void AudioController::playFile(const AudioTrack& track)
 }
 
 /**
- * @brief Reproduz uma sequência de arquivos de áudio em ordem.
+ * @brief Plays a sequence of audio files in order.
  */
 void AudioController::playSequence(
     const AudioPlaylist& playlist,
@@ -257,7 +259,7 @@ void AudioController::playSequence(
     if (playlist.count == 0)
         return;
 
-    // Limpa qualquer comando anterior para assumir a nova playlist
+    // Clears any previous command to take over the new playlist
     _nextCommand = AudioCommand::NONE;
     _sequenceTracks = playlist.tracks;
     _sequenceCount = playlist.count;
@@ -271,31 +273,17 @@ void AudioController::playSequence(
 }
 
 /**
- * @brief Toca um arquivo em modo de repetição contínua (loop).
- */
-void AudioController::playLoop(const AudioTrack& track)
-{
-    _sequenceTracks = nullptr;
-    _nextCommand = AudioCommand::NONE;
-    if (_status != InitStatus::READY)
-        return;
-
-    _commandArg = track.id;
-    _nextCommand = AudioCommand::PLAY_LOOP;
-}
-
-/**
- * @brief Pausa a reprodução e limpa comandos pendentes.
+ * @brief Pauses playback and clears any pending commands.
  */
 void AudioController::stop()
 {
-    // Limpa TUDO imediatamente na RAM para que nenhum comando PLAY
-    // posterior nesta mesma transição consiga executar.
+    // Clears EVERYTHING immediately in RAM so no later PLAY command in
+    // this same transition can execute.
     _sequenceTracks = nullptr;
     _sequenceCount = 0;
     _sequenceMaxLoops = 1;
     _sequenceCurrentLoop = 1;
-    _nextCommand = AudioCommand::STOP; // Sobrescreve qualquer PLAY
+    _nextCommand = AudioCommand::STOP; // Overrides any PLAY
 
     if (_status != InitStatus::READY)
     {
@@ -305,7 +293,7 @@ void AudioController::stop()
 }
 
 /**
- * @brief Entra no modo de hibernação, desligando o amplificador.
+ * @brief Enters hibernation mode, turning off the amplifier.
  */
 void AudioController::hibernate()
 {
@@ -315,17 +303,18 @@ void AudioController::hibernate()
     _nextCommand = AudioCommand::HIBERNATE;
 }
 
-/** @section Gestão de Volume */
+/** @section Volume Management */
 
 /**
- * @brief Atualiza o volume do hardware apenas se houver mudança significativa.
+ * @brief Updates the hardware volume only when there's a meaningful
+ * change.
  */
 void AudioController::setVolume(uint8_t volume)
 {
     if (_status != InitStatus::READY)
         return;
 
-    // Clamping de segurança para o protocolo serial do hardware (0-30)
+    // Safety clamping for the hardware's serial protocol (0-30)
     uint8_t target = (volume > 30) ? 30 : volume;
 
     if (target != _currentVolume)
@@ -336,18 +325,18 @@ void AudioController::setVolume(uint8_t volume)
 }
 
 /**
- * @brief Lê o potenciômetro e aplica filtros de histerese.
+ * @brief Reads the potentiometer and applies hysteresis filtering.
  */
 void AudioController::processVolumePot()
 {
-    // Leitura do pino ADC configurado (0-4095)
+    // Reads the configured ADC pin (0-4095)
     int rawValue = analogRead(_potPin);
 
-    // Mapeamento proporcional para a escala do driver (0-30)
+    // Proportional mapping to the driver's scale (0-30)
     uint8_t mappedVol = (uint8_t)map(rawValue, 0, 4095, 0, 30);
 
-    // Filtro de histerese para evitar flutuações e comandos seriais
-    // desnecessários
+    // Hysteresis filter to avoid fluctuations and unnecessary serial
+    // commands
     if (abs((int)mappedVol - (int)_currentVolume) >= 2)
     {
         setVolume(mappedVol);

@@ -8,52 +8,52 @@ class GameController;
 
 /**
  * @class State
- * @brief Interface base para a implementação dos estados do robô.
+ * @brief Base interface for the robot's state implementations.
  *
- * Define o contrato que todos os estados concretos devem seguir, utilizando o
- * padrão de projeto State para desacoplar a lógica de comportamento.
+ * Defines the contract that every concrete state must follow, using the
+ * State design pattern to decouple the behavior logic.
  */
 class State
 {
     public:
-        /** @brief Destrutor virtual para limpeza das subclasses. */
+        /** @brief Virtual destructor for cleaning up subclasses. */
         virtual ~State() = default;
 
         /**
-         * @brief Chamado uma única vez ao entrar neste estado.
-         * @param controller Ponteiro para o contexto principal da FSM.
+         * @brief Called once when entering this state.
+         * @param controller Pointer to the FSM's main context.
          */
         virtual void enter(GameController* controller) = 0;
 
         /**
-         * @brief Chamado repetidamente a cada ciclo do loop principal.
-         * @param controller Ponteiro para o contexto principal da FSM.
+         * @brief Called repeatedly on every main loop cycle.
+         * @param controller Pointer to the FSM's main context.
          */
         virtual void update(GameController* controller) = 0;
 
         /**
-         * @brief Chamado uma única vez ao sair deste estado.
-         * @param controller Ponteiro para o contexto principal da FSM.
+         * @brief Called once when leaving this state.
+         * @param controller Pointer to the FSM's main context.
          */
         virtual void exit(GameController* controller) = 0;
 
         /**
-         * @brief Processa a detecção de uma tag RFID.
-         * @param controller Ponteiro para o contexto principal da FSM.
-         * @param uid Identificador único da tag lida pelo sensor.
+         * @brief Processes the detection of an RFID tag.
+         * @param controller Pointer to the FSM's main context.
+         * @param uid Unique identifier of the tag read by the sensor.
          */
         virtual void
         handleRFID(GameController* controller, const String& uid) = 0;
 
         /**
-         * @brief Retorna o identificador único deste estado.
-         * @return O valor da enumeração correspondente ao estado.
+         * @brief Returns this state's unique identifier.
+         * @return The enum value corresponding to the state.
          */
         virtual RobotState getStateEnum() const = 0;
 
         /**
-         * @brief Retorna o tempo de duração permitido para este estado.
-         * @return Tempo limite em milissegundos.
+         * @brief Returns the allowed duration for this state.
+         * @return Timeout in milliseconds.
          */
         virtual unsigned long getTimeout() const
         {
@@ -62,12 +62,12 @@ class State
 
     protected:
         /**
-         * @brief Função auxiliar para padronizar a validação de tags RFID.
-         * @param controller Contexto da FSM.
-         * @param uid UID da tag lida.
-         * @param currentTag UID esperado para repetir o estado atual.
-         * @param nextTag UID esperado para avançar no ritual.
-         * @param nextState Estado de destino em caso de avanço.
+         * @brief Helper function to standardize RFID tag validation.
+         * @param controller FSM context.
+         * @param uid UID of the tag that was read.
+         * @param currentTag Expected UID to repeat the current state.
+         * @param nextTag Expected UID to advance the ritual.
+         * @param nextState Destination state when advancing.
          */
         void validateRFID(
             GameController* controller,

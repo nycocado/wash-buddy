@@ -12,20 +12,20 @@ static const std::vector<BehaviorVignette> SUCCESS_POOL = {BehaviorVignette(
     GameConfig::SUCCESS_DISPLAY_MS
 )};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void SuccessState::enter(GameController* controller)
 {
-    // Feedback sonoro de Sucesso (DAH-DAH WEEEE)
+    // Success sound feedback (DAH-DAH WEEEE)
     controller->getAudio().playFile(AudioFiles::SUCCESS);
 
-    // Feedback visual extra
+    // Extra visual feedback
     controller->getDisplay().playHappy();
 
-    // Efeito festivo de confetes
+    // Festive confetti effect
     controller->getDisplay().setParticleEffect(EffectType::CONFETTI);
 
-    // Executa comportamento de comemoração
+    // Runs the celebration behavior
     controller->getBehaviors().setPool(SUCCESS_POOL, 0, 0, false);
 }
 
@@ -34,17 +34,18 @@ void SuccessState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void SuccessState::update(GameController* controller)
 {
     if (millis() - controller->getStateStartTime() > getTimeout())
     {
-        // Após o tempo de sucesso, desliga o sistema enviando o sinal ao módulo
+        // After the success time, shuts down the system by sending the
+        // signal to the module.
         controller->shutdownSystem();
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void SuccessState::handleRFID(GameController* controller, const String& uid) {}

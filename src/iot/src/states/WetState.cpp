@@ -13,17 +13,17 @@ static const std::vector<BehaviorVignette> WET_POOL = {BehaviorVignette(
     GameConfig::WET_TIMEOUT
 )};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void WetState::enter(GameController* controller)
 {
-    // Lógica Pedagógica: Calcula quantas vezes a playlist cabe no tempo da
-    // etapa
+    // Pedagogical logic: computes how many times the playlist fits within
+    // the stage's time
     uint8_t maxLoops = GameConfig::WET_TIMEOUT / Playlists::WET.totalDurationMs;
     if (maxLoops == 0)
         maxLoops = 1;
 
-    // Feedback sonoro sequencial de WET (Chuva)
+    // Sequential sound feedback for WET (rain)
     controller->getAudio().playSequence(Playlists::WET, maxLoops);
 
     controller->getDisplay().setParticleEffect(EffectType::RAIN_LIGHT);
@@ -35,7 +35,7 @@ void WetState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void WetState::update(GameController* controller)
 {
@@ -45,7 +45,7 @@ void WetState::update(GameController* controller)
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void WetState::handleRFID(GameController* controller, const String& uid)
 {

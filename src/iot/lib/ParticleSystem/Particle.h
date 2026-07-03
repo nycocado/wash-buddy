@@ -5,35 +5,36 @@
 
 /**
  * @class Particle
- * @brief Classe base abstrata para todos os tipos de partículas.
+ * @brief Abstract base class for every particle type.
  *
- * Define a interface obrigatória e atributos fundamentais para efeitos visuais.
+ * Defines the required interface and fundamental attributes for visual
+ * effects.
  */
 class Particle
 {
     public:
-        /** @brief Destrutor virtual para limpeza das classes derivadas. */
+        /** @brief Virtual destructor for cleaning up derived classes. */
         virtual ~Particle() {}
 
         /**
-         * @brief Atualiza a física da partícula.
-         * @param deltaTime Tempo decorrido (segundos).
-         * @param screenWidth Largura da tela.
-         * @param screenHeight Altura da tela.
-         * @return true se a partícula continua viva, false se deve ser
-         * destruída.
+         * @brief Updates the particle's physics.
+         * @param deltaTime Time elapsed (seconds).
+         * @param screenWidth Screen width.
+         * @param screenHeight Screen height.
+         * @return true if the particle is still alive, false if it should
+         * be destroyed.
          */
         virtual bool
         update(float deltaTime, int screenWidth, int screenHeight) = 0;
 
         /**
-         * @brief Renderiza a partícula no display.
-         * @param display Referência para a biblioteca U8G2.
+         * @brief Renders the particle on the display.
+         * @param display Reference to the U8G2 library.
          */
         virtual void draw(U8G2& display) = 0;
 
     protected:
-        float x;     ///< Posição horizontal atual.
-        float y;     ///< Posição vertical atual.
-        float speed; ///< Velocidade base (pixels/s).
+        float x;     ///< Current horizontal position.
+        float y;     ///< Current vertical position.
+        float speed; ///< Base speed (pixels/s).
 };

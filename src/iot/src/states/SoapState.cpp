@@ -9,29 +9,29 @@ static const std::vector<BehaviorVignette> SOAP_POOL = {BehaviorVignette(
     1.0f,
     ChoreoAction(),
     ChoreoAction(ChoreographyLibrary::soapSlide(), 0.0f, true),
-    ChoreoAction(ChoreographyLibrary::soapSlide(), 0.8f, true), // Alternado
-                                                                // perfeitamente
+    ChoreoAction(ChoreographyLibrary::soapSlide(), 0.8f, true), // Perfectly
+                                                                // alternated
     GameConfig::SOAP_TIMEOUT
 )};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void SoapState::enter(GameController* controller)
 {
-    // Lógica Pedagógica: Calcula quantas vezes a playlist cabe no tempo da
-    // etapa.
+    // Pedagogical logic: computes how many times the playlist fits within
+    // the stage's time.
     uint8_t maxLoops =
         GameConfig::SOAP_TIMEOUT / Playlists::SOAP.totalDurationMs;
     if (maxLoops == 0)
         maxLoops = 1;
 
-    // Feedback sonoro sequencial de SOAP (Bolhas)
+    // Sequential sound feedback for SOAP (bubbles)
     controller->getAudio().playSequence(Playlists::SOAP, maxLoops);
 
-    // Efeito visual de higiene
+    // Hygiene visual effect
     controller->getDisplay().setParticleEffect(EffectType::BUBBLES);
 
-    // Executa movimento de 'pegar sabão' alternando os braços.
+    // Runs a "grabbing soap" motion, alternating the arms.
     controller->getBehaviors().setPool(SOAP_POOL, 0, 0, false);
 }
 
@@ -40,7 +40,7 @@ void SoapState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void SoapState::update(GameController* controller)
 {
@@ -50,7 +50,7 @@ void SoapState::update(GameController* controller)
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void SoapState::handleRFID(GameController* controller, const String& uid)
 {

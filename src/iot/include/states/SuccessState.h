@@ -3,51 +3,54 @@
 
 /**
  * @class SuccessState
- * @brief Estado de celebração ao concluir o ritual de lavagem corretamente.
+ * @brief Celebration state upon successfully completing the wash ritual.
  *
- * Este estado é ativado após o sucesso na fase de secagem. O objetivo é
- * recompensar a criança e reforçar positivamente o hábito de higiene.
+ * This state is activated after succeeding at the drying stage. The goal
+ * is to reward the child and positively reinforce the hygiene habit.
  *
- * Feedback Visual: Expressão de extrema felicidade (Glee) e partículas de
- * confete. Feedback Físico: O robô acena os braços em sinal de vitória.
+ * Visual feedback: extreme happiness expression (Glee) and confetti
+ * particles. Physical feedback: the robot waves its arms as a sign of
+ * victory.
  */
 class SuccessState : public State
 {
     public:
         /**
-         * @brief Ativa os confetes, o áudio de vitória e o humor festivo.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Activates the confetti, the victory audio, and the
+         * festive mood.
+         * @param controller Pointer to the central game controller.
          */
         void enter(GameController* controller) override;
 
         /**
-         * @brief Aguarda o fim da celebração e transiciona para o desligamento.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Waits for the celebration to end and transitions to
+         * shutdown.
+         * @param controller Pointer to the central game controller.
          */
         void update(GameController* controller) override;
 
         /**
-         * @brief Encerra as animações de sucesso.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Ends the success animations.
+         * @param controller Pointer to the central game controller.
          */
         void exit(GameController* controller) override;
 
         /**
-         * @brief Ignora novas leituras durante a comemoração final.
-         * @param controller Ponteiro para o controlador de jogo.
-         * @param uid Identificador da tag detectada.
+         * @brief Ignores new reads during the final celebration.
+         * @param controller Pointer to the game controller.
+         * @param uid Identifier of the detected tag.
          */
         void handleRFID(GameController* controller, const String& uid) override;
 
         /**
-         * @brief Retorna o enum RobotState::SUCCESS.
-         * @return RobotState O estado de sucesso.
+         * @brief Returns the RobotState::SUCCESS enum.
+         * @return RobotState The success state.
          */
         RobotState getStateEnum() const override { return RobotState::SUCCESS; }
 
         /**
-         * @brief Retorna o tempo de exibição da celebração.
-         * @return unsigned long Tempo em milissegundos.
+         * @brief Returns the celebration's display duration.
+         * @return unsigned long Time in milliseconds.
          */
         unsigned long getTimeout() const override
         {

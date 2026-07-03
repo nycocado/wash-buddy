@@ -4,7 +4,7 @@
 #include "MotionController.h"
 
 /**
- * @section Ciclo de Vida e Configuração
+ * @section Lifecycle and Configuration
  */
 
 BehaviorEngine::BehaviorEngine() {}
@@ -25,8 +25,8 @@ void BehaviorEngine::setPool(
     _currentIndex = -1;
     _isInAction = false;
 
-    // Agenda o primeiro comportamento para acontecer após uma pequena pausa
-    // inicial para evitar disparos imediatos durante transições de estado.
+    // Schedules the first behavior to happen after a small initial pause,
+    // to avoid immediate triggers during state transitions.
     _nextEventTime = millis() + _minPause;
 
     Serial.println(F("[BEHAVIOR] Novo pool de comportamentos carregado."));
@@ -42,7 +42,7 @@ void BehaviorEngine::stop()
 }
 
 /**
- * @section Motor de Execução (Update Loop)
+ * @section Execution Engine (Update Loop)
  */
 
 void BehaviorEngine::update(
@@ -51,14 +51,14 @@ void BehaviorEngine::update(
     AudioController& audio
 )
 {
-    // O motor silencia se não houver ações ou se estiver em pausa (ex: durante
-    // instruções)
+    // The engine goes silent if there are no actions or if it's paused
+    // (e.g. during instructions)
     if (_pool.empty() || _isPaused)
         return;
 
     unsigned long now = millis();
 
-    // Lógica de alternância entre Ação (Vignette) e Repouso (Rest)
+    // Alternates between action (vignette) and rest logic
     if (now >= _nextEventTime)
     {
         if (!_isInAction)
@@ -73,7 +73,7 @@ void BehaviorEngine::update(
 }
 
 /**
- * @section Gestão de Vinhetas e Silêncio Orgânico
+ * @section Vignette Management and Organic Silence
  */
 
 void BehaviorEngine::pickNextAction(
@@ -85,16 +85,16 @@ void BehaviorEngine::pickNextAction(
     if (_pool.empty())
         return;
 
-    // Escolha do índice baseada no modo de reprodução
+    // Index selection based on the playback mode
     if (_loop)
     {
-        // No modo loop, sorteamos aleatoriamente para simular comportamento
-        // orgânico e imprevisível.
+        // In loop mode, we pick randomly to simulate organic,
+        // unpredictable behavior.
         _currentIndex = random(0, _pool.size());
     }
     else
     {
-        // No modo sequencial (One-Shot), avançamos linearmente.
+        // In sequential (one-shot) mode, we advance linearly.
         _currentIndex++;
         if (_currentIndex >= (int)_pool.size())
         {
@@ -106,13 +106,13 @@ void BehaviorEngine::pickNextAction(
     BehaviorVignette& vignette = _pool[_currentIndex];
     _isInAction = true;
 
-    // --- ORQUESTRAÇÃO DA VINHETA ---
+    // --- VIGNETTE ORCHESTRATION ---
 
-    // 1. Expressão Facial e Direção do Olhar
+    // 1. Facial expression and look direction
     display.setEyeMood(vignette.mood);
     display.lookAt(vignette.lookX, vignette.lookY);
 
-    // 2. Acionamento de Coreografias (Cérebro Motor)
+    // 2. Choreography triggers (motor brain)
     if (!vignette.head.steps.empty())
     {
         motion.playHeadChoreography(
@@ -134,13 +134,14 @@ void BehaviorEngine::pickNextAction(
         );
     }
 
-    // 3. Disparo de Áudio Sincronizado
+    // 3. Synchronized audio trigger
     if (vignette.audioTrack.id > 0)
     {
         audio.playFile(vignette.audioTrack);
     }
 
-    // Define o timer para o fim desta ação (duração pedagógica da vinheta)
+    // Sets the timer for the end of this action (the vignette's
+    // pedagogical duration)
     _nextEventTime = millis() + vignette.durationMs;
 }
 
@@ -151,13 +152,13 @@ void BehaviorEngine::enterRest(
 {
     _isInAction = false;
 
-    // Garante que qualquer animação de braço/cabeça da vinheta anterior seja
-    // cessada
+    // Ensures any arm/head animation from the previous vignette is
+    // stopped
     motion.stopAllAnimations();
 
-    // --- RESET VISUAL (Opcional) ---
-    // Útil para estados de IDLE onde queremos que o robô volte ao neutro entre
-    // acenos.
+    // --- VISUAL RESET (optional) ---
+    // Useful for IDLE states, where we want the robot to return to
+    // neutral between waves.
     if (_resetOnRest)
     {
         display.setEyeMood(eEmotions::Normal);
@@ -165,8 +166,8 @@ void BehaviorEngine::enterRest(
         motion.centerAll();
     }
 
-    // Sorteia o tempo de silêncio/repouso entre as vinhetas para evitar
-    // roboticidade.
+    // Picks a random rest/silence time between vignettes to avoid
+    // robotic-feeling motion.
     unsigned long pause = random(_minPause, _maxPause + 1);
     _nextEventTime = millis() + pause;
 }

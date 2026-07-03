@@ -12,24 +12,24 @@ static const std::vector<BehaviorVignette> SCRUB_POOL = {BehaviorVignette(
     GameConfig::SCRUB_TIMEOUT
 )};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void ScrubState::enter(GameController* controller)
 {
-    // Lógica Pedagógica: Calcula quantas vezes a playlist cabe no tempo da
-    // etapa.
+    // Pedagogical logic: computes how many times the playlist fits within
+    // the stage's time.
     uint8_t maxLoops =
         GameConfig::SCRUB_TIMEOUT / Playlists::SCRUB.totalDurationMs;
     if (maxLoops == 0)
         maxLoops = 1;
 
-    // Feedback sonoro sequencial de SCRUB (Esfregar)
+    // Sequential sound feedback for SCRUB
     controller->getAudio().playSequence(Playlists::SCRUB, maxLoops);
 
-    // Efeito visual de higiene
+    // Hygiene visual effect
     controller->getDisplay().setParticleEffect(EffectType::BUBBLES);
 
-    // Executa movimento repetitivo de esfregação sincronizada entre os braços.
+    // Runs a repetitive, synchronized scrubbing motion between the arms.
     controller->getBehaviors().setPool(SCRUB_POOL, 0, 0, false);
 }
 
@@ -38,7 +38,7 @@ void ScrubState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void ScrubState::update(GameController* controller)
 {
@@ -48,7 +48,7 @@ void ScrubState::update(GameController* controller)
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void ScrubState::handleRFID(GameController* controller, const String& uid)
 {

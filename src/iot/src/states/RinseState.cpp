@@ -12,24 +12,24 @@ static const std::vector<BehaviorVignette> RINSE_POOL = {BehaviorVignette(
     GameConfig::RINSE_TIMEOUT
 )};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void RinseState::enter(GameController* controller)
 {
-    // Lógica Pedagógica: Calcula quantas vezes a playlist cabe no tempo da
-    // etapa.
+    // Pedagogical logic: computes how many times the playlist fits within
+    // the stage's time.
     uint8_t maxLoops =
         GameConfig::RINSE_TIMEOUT / Playlists::RINSE.totalDurationMs;
     if (maxLoops == 0)
         maxLoops = 1;
 
-    // Feedback sonoro sequencial de RINSE (Enxágue)
+    // Sequential sound feedback for RINSE
     controller->getAudio().playSequence(Playlists::RINSE, maxLoops);
 
-    // Efeito visual de chuva pesada
+    // Heavy rain visual effect
     controller->getDisplay().setParticleEffect(EffectType::RAIN_HEAVY);
 
-    // Movimento de 'mergulho' simulando as mãos sob a água.
+    // "Dipping" motion simulating the hands under the water.
     controller->getBehaviors().setPool(RINSE_POOL, 0, 0, false);
 }
 
@@ -38,7 +38,7 @@ void RinseState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void RinseState::update(GameController* controller)
 {
@@ -48,7 +48,7 @@ void RinseState::update(GameController* controller)
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void RinseState::handleRFID(GameController* controller, const String& uid)
 {

@@ -6,24 +6,24 @@
 #include <vector>
 
 /**
- * @brief Configurações de limites e velocidades dos servos.
+ * @brief Servo limit and speed settings.
  */
 struct MotionSettings
 {
-        int minHeadAngle = 0;         ///< Ângulo mínimo da cabeça
-        int maxHeadAngle = 180;       ///< Ângulo máximo da cabeça
-        int minArmAngle = 0;          ///< Ângulo mínimo dos braços
-        int maxArmAngle = 180;        ///< Ângulo máximo dos braços
-        int defaultHeadCenter = 90;   ///< Posição central da cabeça
-        int defaultArmCenter = 90;    ///< Posição de repouso dos braços
-        float defaultDuration = 1.0f; ///< Duração padrão (segundos)
-        bool invertArmL = false;      ///< Inversão lógica do braço esquerdo
-        bool invertArmR = true;       ///< Inversão lógica do braço direito
-        bool invertHead = false;      ///< Inversão lógica da cabeça
+        int minHeadAngle = 0;         ///< Minimum head angle
+        int maxHeadAngle = 180;       ///< Maximum head angle
+        int minArmAngle = 0;          ///< Minimum arm angle
+        int maxArmAngle = 180;        ///< Maximum arm angle
+        int defaultHeadCenter = 90;   ///< Head's center position
+        int defaultArmCenter = 90;    ///< Arms' rest position
+        float defaultDuration = 1.0f; ///< Default duration (seconds)
+        bool invertArmL = false;      ///< Logical inversion of the left arm
+        bool invertArmR = true;       ///< Logical inversion of the right arm
+        bool invertHead = false;      ///< Logical inversion of the head
 };
 
 /**
- * @brief Estrutura interna para encapsular a física e o estado de um motor.
+ * @brief Internal structure encapsulating one motor's physics and state.
  */
 struct MotorAxis
 {
@@ -39,7 +39,7 @@ struct MotorAxis
         int minAngle;
         int maxAngle;
         bool isMoving;
-        bool isInverted; ///< Se true, inverte o sinal (180 - angulo)
+        bool isInverted; ///< If true, inverts the signal (180 - angle)
 
         MotorAxis(
             uint8_t p_pin,
@@ -56,9 +56,9 @@ struct MotorAxis
         }
 
         /**
-         * @brief Define o novo alvo de movimento.
-         * @param angle Ângulo desejado.
-         * @param duration Tempo para completar o movimento (segundos).
+         * @brief Sets the new movement target.
+         * @param angle Desired angle.
+         * @param duration Time to complete the movement (seconds).
          */
         void setTarget(int angle, float duration = 1.0f)
         {
@@ -72,17 +72,17 @@ struct MotorAxis
 
 /**
  * @class MotionController
- * @brief Controlador físico de atuadores (Servos) baseado em tempo.
+ * @brief Time-based physical controller for actuators (servos).
  */
 class MotionController
 {
     public:
         /**
-         * @brief Construtor do gerenciador de movimentos.
-         * @param pinArmL Pino do braço esquerdo.
-         * @param pinArmR Pino do braço direito.
-         * @param pinHead Pino da cabeça.
-         * @param config Estrutura de configurações físicas.
+         * @brief Constructor for the motion manager.
+         * @param pinArmL Left arm pin.
+         * @param pinArmR Right arm pin.
+         * @param pinHead Head pin.
+         * @param config Physical settings structure.
          */
         MotionController(
             uint8_t pinArmL,
@@ -91,44 +91,45 @@ class MotionController
             const MotionSettings& config = MotionSettings()
         );
 
-        /** @brief Inicializa os servos e prepara o acionamento em cascata. */
+        /** @brief Initializes the servos and prepares the cascading power-up.
+         */
         void init();
 
         /**
-         * @brief Atualiza a física dos servos.
-         * @param deltaTime Tempo decorrido desde o último quadro (segundos).
+         * @brief Updates the servo physics.
+         * @param deltaTime Time elapsed since the last frame (seconds).
          */
         void update(float deltaTime);
 
         /**
-         * @brief Move o braço esquerdo.
-         * @param angle Ângulo de destino.
-         * @param duration Duração do movimento (segundos).
+         * @brief Moves the left arm.
+         * @param angle Destination angle.
+         * @param duration Movement duration (seconds).
          */
         void moveArmL(int angle, float duration = -1.0f);
 
         /**
-         * @brief Move o braço direito.
-         * @param angle Ângulo de destino.
-         * @param duration Duração do movimento (segundos).
+         * @brief Moves the right arm.
+         * @param angle Destination angle.
+         * @param duration Movement duration (seconds).
          */
         void moveArmR(int angle, float duration = -1.0f);
 
         /**
-         * @brief Move a cabeça.
-         * @param angle Ângulo de destino.
-         * @param duration Duração do movimento (segundos).
+         * @brief Moves the head.
+         * @param angle Destination angle.
+         * @param duration Movement duration (seconds).
          */
         void moveHead(int angle, float duration = -1.0f);
 
-        /** @brief Retorna todos os servos para suas posições de repouso. */
+        /** @brief Returns every servo to its rest position. */
         void centerAll();
 
         /**
-         * @brief Inicia uma coreografia na cabeça.
-         * @param choreography Vetor de passos.
-         * @param startDelay Atraso inicial (segundos).
-         * @param loop Se deve repetir.
+         * @brief Starts a choreography on the head.
+         * @param choreography Vector of steps.
+         * @param startDelay Initial delay (seconds).
+         * @param loop Whether it should loop.
          */
         void playHeadChoreography(
             const std::vector<ChoreoStep>& choreography,
@@ -137,10 +138,10 @@ class MotionController
         );
 
         /**
-         * @brief Inicia uma coreografia no braço esquerdo.
-         * @param choreography Vetor de passos.
-         * @param startDelay Atraso inicial (segundos).
-         * @param loop Se deve repetir.
+         * @brief Starts a choreography on the left arm.
+         * @param choreography Vector of steps.
+         * @param startDelay Initial delay (seconds).
+         * @param loop Whether it should loop.
          */
         void playArmLChoreography(
             const std::vector<ChoreoStep>& choreography,
@@ -149,10 +150,10 @@ class MotionController
         );
 
         /**
-         * @brief Inicia uma coreografia no braço direito.
-         * @param choreography Vetor de passos.
-         * @param startDelay Atraso inicial (segundos).
-         * @param loop Se deve repetir.
+         * @brief Starts a choreography on the right arm.
+         * @param choreography Vector of steps.
+         * @param startDelay Initial delay (seconds).
+         * @param loop Whether it should loop.
          */
         void playArmRChoreography(
             const std::vector<ChoreoStep>& choreography,
@@ -160,18 +161,17 @@ class MotionController
             bool loop = true
         );
 
-        /** @brief Interrompe todas as animações ativas. */
+        /** @brief Stops every active animation. */
         void stopAllAnimations();
 
         /**
-         * @brief Calcula a interpolação suave (Smoothstep).
-         * @param start Ângulo inicial.
-         * @param target Ângulo de destino.
-         * @param progress Progresso linear de 0.0 a 1.0.
-         * @return Ângulo interpolado na curva suave.
+         * @brief Computes the smooth interpolation (smoothstep).
+         * @param start Initial angle.
+         * @param target Destination angle.
+         * @param progress Linear progress from 0.0 to 1.0.
+         * @return Interpolated angle on the smooth curve.
          */
-        static float
-        easeSmoothStep(float start, float target, float progress);
+        static float easeSmoothStep(float start, float target, float progress);
 
     private:
         const MotionSettings _config;
@@ -188,8 +188,8 @@ class MotionController
         unsigned long _lastInitTime = 0;
 
         /**
-         * @brief Processa a física de um eixo específico.
-         * @return True se um token de inicialização foi consumido.
+         * @brief Processes the physics of a specific axis.
+         * @return True if an initiation token was consumed.
          */
         bool updateAxisPhysics(
             MotorAxis& axis,

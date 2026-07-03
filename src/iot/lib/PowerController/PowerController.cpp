@@ -7,11 +7,11 @@ PowerController::PowerController(uint8_t mosfetPin, uint8_t shutdownPin)
 
 void PowerController::init()
 {
-    // Configura os motores (Inicia ligado)
+    // Configures the motors (starts enabled)
     pinMode(_mosfetPin, OUTPUT);
     enableMotors();
 
-    // Configura o pino de Shutdown (Inicia desligado / LOW)
+    // Configures the shutdown pin (starts disabled / LOW)
     pinMode(_shutdownPin, OUTPUT);
     digitalWrite(_shutdownPin, LOW);
 
@@ -32,14 +32,15 @@ void PowerController::requestSystemShutdown()
 {
     Serial.println(F("[POWER] ENVIANDO SINAL DE DESLIGAMENTO (HIGH)..."));
 
-    // 1. Desliga os motores imediatamente para reduzir carga
+    // 1. Turns off the motors immediately to reduce load
     disableMotors();
 
-    // 2. Coloca o pino de shutdown em HIGH
+    // 2. Sets the shutdown pin to HIGH
     digitalWrite(_shutdownPin, HIGH);
 
-    // 3. Aguarda os 10 segundos necessários para o módulo de bateria atuar.
-    // Como o sistema vai cair, podemos usar delay bloqueante aqui.
+    // 3. Waits the 10 seconds required for the battery module to act.
+    // Since the system is about to lose power, a blocking delay is fine
+    // here.
     Serial.println(F("[POWER] Aguardando 10s para queda de energia..."));
     for (int i = 10; i > 0; i--)
     {
@@ -48,6 +49,6 @@ void PowerController::requestSystemShutdown()
         delay(1000);
     }
 
-    // Se chegar aqui, o hardware falhou em cortar a luz.
+    // If execution reaches here, the hardware failed to cut the power.
     Serial.println(F("\n[POWER] ERRO: O sistema nao desligou!"));
 }

@@ -6,116 +6,98 @@
 #include <Arduino.h>
 
 /**
- * @brief Configurações básicas de hardware e tempo do display.
+ * @brief Basic hardware and timing settings for the display.
  */
 struct DisplayConfig
 {
-        uint8_t screenWidth = 128;    ///< Largura da tela em pixels
-        uint8_t screenHeight = 64;    ///< Altura da tela em pixels
-        uint32_t frameInterval = 16;  ///< Intervalo entre quadros (ms) ~60fps
-        float transitionSpeed = 5.0f; ///< Velocidade da transição de cortina
-        uint8_t iconDefaultSize = 64; ///< Tamanho padrão (quadrado) dos ícones
+        uint8_t screenWidth = 128;    ///< Screen width in pixels
+        uint8_t screenHeight = 64;    ///< Screen height in pixels
+        uint32_t frameInterval = 16;  ///< Interval between frames (ms) ~60fps
+        float transitionSpeed = 5.0f; ///< Curtain transition speed
+        uint8_t iconDefaultSize = 64; ///< Default (square) icon size
 };
 
 /**
  * @class DisplayOrchestrator
- * @brief Orquestrador central de toda a saída visual no OLED.
+ * @brief Central orchestrator for all visual output on the OLED.
  *
- * Esta classe é responsável por sincronizar o desenho das expressões
- * (ExpressionEngine) e dos sistemas de partículas (ParticleSystem) em um único
- * buffer da U8g2, garantindo que a atualização da tela seja fluida e sem
- * flickering.
+ * This class is responsible for synchronizing the drawing of the
+ * expressions (ExpressionEngine) and the particle systems (ParticleSystem)
+ * into a single U8g2 buffer, ensuring the screen updates smoothly and
+ * without flickering.
  */
 class DisplayOrchestrator
 {
     public:
         /**
-         * @brief Construtor do orquestrador.
-         * @param config Estrutura com as definições de tela.
+         * @brief Orchestrator constructor.
+         * @param config Structure with the screen settings.
          */
         DisplayOrchestrator(const DisplayConfig& config = DisplayConfig());
 
         /**
-         * @brief Inicializa o hardware do display e os sub-sistemas.
-         * Configura os pinos I2C e prepara os motores de animação internos.
+         * @brief Initializes the display hardware and its sub-systems.
+         * Configures the I2C pins and prepares the internal animation
+         * engines.
          */
         void init();
 
         /**
-         * @brief Atualiza a lógica de animação e renderiza o próximo quadro.
-         * @param deltaTime Tempo decorrido desde o último quadro (segundos).
+         * @brief Updates the animation logic and renders the next frame.
+         * @param deltaTime Time elapsed since the last frame (seconds).
          */
         void update(float deltaTime);
 
         /**
-         * @brief Define o humor/expressão atual.
-         * @param mood Um dos valores do enum eEmotions (ex: Happy, Angry).
+         * @brief Sets the current mood/expression.
+         * @param mood One of the eEmotions enum values (e.g. Happy, Angry).
          */
         void setEyeMood(eEmotions mood);
 
         /**
-         * @brief Direciona o olhar para uma coordenada específica.
-         * @param x Posição horizontal (-1.0 esquerda, 1.0 direita).
-         * @param y Posição vertical (-1.0 baixo, 1.0 cima).
+         * @brief Points the gaze toward a specific coordinate.
+         * @param x Horizontal position (-1.0 left, 1.0 right).
+         * @param y Vertical position (-1.0 down, 1.0 up).
          */
         void lookAt(float x, float y);
 
         /**
-         * @brief Ativa uma animação curta de confusão/dúvida.
+         * @brief Plays a short confusion/doubt animation.
          */
         void playConfused();
 
         /**
-         * @brief Ativa uma animação curta de felicidade/comemoração.
+         * @brief Plays a short happiness/celebration animation.
          */
         void playHappy();
 
         /**
-         * @brief Define o efeito de partículas atmosféricas ativo.
-         * @param type Tipo de efeito (ex: BUBBLES, RAIN, DRIP).
+         * @brief Sets the active atmospheric particle effect.
+         * @param type Effect type (e.g. BUBBLES, RAIN, DRIP).
          */
         void setParticleEffect(EffectType type);
 
         /**
-         * @brief Define a probabilidade de nascimento de novas partículas.
-         * @param chance Valor de 0 a 100.
-         */
-        void setParticleSpawnChance(int chance);
-
-        /**
-         * @brief Limita a quantidade máxima de partículas simultâneas.
-         * @param max Quantidade máxima permitida.
-         */
-        void setMaxParticles(int max);
-
-        /**
-         * @brief Exibe um ícone de instrução por um tempo determinado.
-         * Após o tempo expirar, o display volta a mostrar os olhos.
-         * @param icon Ponteiro PROGMEM para o XBM.
-         * @param durationMs Tempo em milissegundos (0 para fixo).
+         * @brief Shows an instruction icon for a set amount of time.
+         * Once the time expires, the display goes back to showing the
+         * eyes.
+         * @param icon PROGMEM pointer to the XBM.
+         * @param durationMs Time in milliseconds (0 for fixed).
          */
         void
         showInstruction(const uint8_t* icon, unsigned long durationMs = 3000);
 
         /**
-         * @brief Define o ícone de instrução a ser exibido (sem timeout).
-         */
-        void setInstructionIcon(
-            const uint8_t* icon,
-            uint8_t width = 0,
-            uint8_t height = 0
-        );
-
-        /**
-         * @brief Remove imediatamente qualquer ícone de instrução e força
-         * o retorno aos olhos.
+         * @brief Immediately removes any instruction icon and forces a
+         * return to the eyes.
          */
         void clearInstruction();
 
         /**
-         * @brief Verifica se um ícone de instrução ou uma transição está ativa.
-         * @return true se um ícone de instrução estiver sendo exibido ou se uma
-         * transição de cortina estiver em andamento, false caso contrário.
+         * @brief Checks whether an instruction icon or a transition is
+         * active.
+         * @return true if an instruction icon is being shown or a curtain
+         * transition is in progress, false otherwise.
          */
         bool isInstructionActive() const
         {
@@ -125,18 +107,13 @@ class DisplayOrchestrator
         }
 
         /**
-         * @brief Coloca o controlador do display em modo Power Save.
+         * @brief Puts the display controller into power-save mode.
          */
         void prepareForSleep();
 
         /**
-         * @brief Acorda o controlador do display.
-         */
-        void wakeUp();
-
-        /**
-         * @brief Exibe um texto de debug no canto superior da tela.
-         * @param text O texto a ser exibido. Deixe vazio ("") para ocultar.
+         * @brief Shows a debug text in the top corner of the screen.
+         * @param text The text to display. Leave empty ("") to hide it.
          */
         void setDebugText(const String& text);
 
@@ -148,13 +125,13 @@ class DisplayOrchestrator
         String _debugText;
 
         const uint8_t* _currentInstructionIcon = nullptr;
-        const uint8_t* _pendingIcon = nullptr; // Próximo ícone a ser mostrado
+        const uint8_t* _pendingIcon = nullptr; // Next icon to be shown
         uint8_t _instructionWidth = 64;
         uint8_t _instructionHeight = 64;
         unsigned long _instructionStartTime = 0;
         unsigned long _instructionEndTime = 0;
 
-        // Controle de Transição
+        // Transition control
         enum class TransitionState
         {
             IDLE,

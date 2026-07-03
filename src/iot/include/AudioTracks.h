@@ -2,7 +2,7 @@
 
 #include "AudioTypes.h"
 
-// Macro para facilitar a criação de playlists calculando a duração
+// Macro to simplify creating playlists while computing their duration
 template <size_t N>
 inline AudioPlaylist makePlaylist(const AudioTrack (&array)[N])
 {
@@ -16,7 +16,7 @@ inline AudioPlaylist makePlaylist(const AudioTrack (&array)[N])
 
 /**
  * @namespace AudioFiles
- * @brief Faixas de áudio individuais com ID e duração.
+ * @brief Individual audio tracks with ID and duration.
  */
 namespace AudioFiles
 {
@@ -53,7 +53,7 @@ namespace AudioFiles
 
 /**
  * @namespace Playlists
- * @brief Sequências de áudio agrupadas por etapa do ritual.
+ * @brief Audio sequences grouped by ritual stage.
  */
 namespace Playlists
 {
@@ -63,21 +63,15 @@ namespace Playlists
     const AudioTrack SOAP_TRACKS[] = {AudioFiles::SOAP_1, AudioFiles::SOAP_2};
     const AudioPlaylist SOAP = makePlaylist(SOAP_TRACKS);
 
-    const AudioTrack SCRUB_TRACKS[] = {
-        AudioFiles::SCRUB_1,
-        AudioFiles::SCRUB_2,
-        AudioFiles::SCRUB_3};
+    const AudioTrack SCRUB_TRACKS[] =
+        {AudioFiles::SCRUB_1, AudioFiles::SCRUB_2, AudioFiles::SCRUB_3};
     const AudioPlaylist SCRUB = makePlaylist(SCRUB_TRACKS);
 
-    const AudioTrack RINSE_TRACKS[] = {
-        AudioFiles::RINSE_1,
-        AudioFiles::RINSE_2,
-        AudioFiles::RINSE_3};
+    const AudioTrack RINSE_TRACKS[] =
+        {AudioFiles::RINSE_1, AudioFiles::RINSE_2, AudioFiles::RINSE_3};
     const AudioPlaylist RINSE = makePlaylist(RINSE_TRACKS);
 
-    const AudioTrack DRY_TRACKS[] = {
-        AudioFiles::DRY_1,
-        AudioFiles::DRY_2,
-        AudioFiles::DRY_3};
+    const AudioTrack DRY_TRACKS[] =
+        {AudioFiles::DRY_1, AudioFiles::DRY_2, AudioFiles::DRY_3};
     const AudioPlaylist DRY = makePlaylist(DRY_TRACKS);
 } // namespace Playlists

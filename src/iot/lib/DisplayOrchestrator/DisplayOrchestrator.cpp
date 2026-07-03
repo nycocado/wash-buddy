@@ -1,23 +1,24 @@
 #include "DisplayOrchestrator.h"
 
-// Referência externa para a instância global da biblioteca u8g2
-// Esta instância é compartilhada entre os motores de desenho para evitar
-// conflitos de memória e garantir renderização atômica.
+// External reference to the global u8g2 library instance.
+// This instance is shared between the drawing engines to avoid memory
+// conflicts and ensure atomic rendering.
 extern U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2;
 
 DisplayOrchestrator::DisplayOrchestrator(const DisplayConfig& config)
-    : _config(config), _eyes(), // Motor de expressões e comportamento facial
-      _animations(u8g2), // Sistema de partículas vinculado ao buffer da u8g2
+    : _config(config), _eyes(), // Facial expression and behavior engine
+      _animations(u8g2),        // Particle system bound to the u8g2 buffer
       _lastUpdate(0), _debugText("")
 {
 }
 
 void DisplayOrchestrator::init()
 {
-    // Inicializa a lógica dos olhos usando as dimensões do orquestrador
+    // Initializes the eye logic using the orchestrator's dimensions
     _eyes.begin(_config.screenWidth, _config.screenHeight);
 
-    Serial.println(F("[DISPLAY] Orquestrador visual inicializado com sucesso.")
+    Serial.println(
+        F("[DISPLAY] Orquestrador visual inicializado com sucesso.")
     );
 }
 
@@ -25,9 +26,10 @@ void DisplayOrchestrator::update(float deltaTime)
 {
     unsigned long now = millis();
 
-    // --- LÓGICA DE TRANSIÇÃO PROGRESSIVA (CORTINAS) ---
-    // Gerencia o fechamento e abertura da 'cortina' entre olhos e ícones
-    const float transitionSpeed = 5.0f; // Velocidade da transição
+    // --- PROGRESSIVE TRANSITION LOGIC (CURTAINS) ---
+    // Manages the closing and opening of the "curtain" between the eyes
+    // and icons
+    const float transitionSpeed = 5.0f; // Transition speed
 
     if (_transitionState == TransitionState::CLOSING)
     {
@@ -50,22 +52,22 @@ void DisplayOrchestrator::update(float deltaTime)
         }
     }
 
-    // --- LÓGICA DE EXPIRAÇÃO DE ÍCONE ---
+    // --- ICON EXPIRATION LOGIC ---
     if (_currentInstructionIcon != nullptr && _instructionEndTime > 0 &&
         now > _instructionEndTime && _transitionState == TransitionState::IDLE)
     {
-        // Se o ícone expirar, inicia a transição para voltar aos olhos
+        // If the icon expires, starts the transition back to the eyes
         _pendingIcon = nullptr;
         _transitionState = TransitionState::CLOSING;
     }
 
-    // 1. Limpa o buffer de desenho
+    // 1. Clears the drawing buffer
     u8g2.clearBuffer();
 
-    // 2. Desenha a base (Ícone de Instrução OU Olhos)
+    // 2. Draws the base layer (instruction icon OR eyes)
     if (_currentInstructionIcon != nullptr)
     {
-        // Animação de Floating (apenas se não estiver abrindo/fechando)
+        // Floating animation (only while not opening/closing)
         float floatOffset = 0;
         if (_transitionState == TransitionState::IDLE)
         {
@@ -84,23 +86,23 @@ void DisplayOrchestrator::update(float deltaTime)
         _eyes.draw();
     }
 
-    // 3. Efeito 'Zíper' de Transição (Cortinas)
+    // 3. Transition "zipper" effect (curtains)
     if (_transitionProgress > 0.0f)
     {
-        int h = (int)(_transitionProgress * 32); // Metade da tela
-        u8g2.setDrawColor(0);                    // Cor preta para apagar
-        u8g2.drawBox(0, 0, 128, h);              // Cortina superior
-        u8g2.drawBox(0, 64 - h, 128, h);         // Cortina inferior
-        u8g2.setDrawColor(1);                    // Volta ao branco normal
+        int h = (int)(_transitionProgress * 32); // Half the screen
+        u8g2.setDrawColor(0);                    // Black to erase
+        u8g2.drawBox(0, 0, 128, h);              // Top curtain
+        u8g2.drawBox(0, 64 - h, 128, h);         // Bottom curtain
+        u8g2.setDrawColor(1);                    // Back to normal white
     }
 
-    // 4. Partículas (Sempre visíveis)
+    // 4. Particles (always visible)
     _animations.update(deltaTime);
     _animations.draw();
 
-    // ... restante do código de debug e renderização ...
+    // ... rest of the debug and rendering code ...
 
-    // 4. Debug Overlay
+    // 4. Debug overlay
     if (_debugText.length() > 0)
     {
         u8g2.setFont(u8g2_font_5x7_tf);
@@ -121,19 +123,6 @@ void DisplayOrchestrator::showInstruction(
     _transitionState = TransitionState::CLOSING;
 }
 
-void DisplayOrchestrator::setInstructionIcon(
-    const uint8_t* icon,
-    uint8_t width,
-    uint8_t height
-)
-{
-    _pendingIcon = icon;
-    _instructionWidth = (width == 0) ? _config.iconDefaultSize : width;
-    _instructionHeight = (height == 0) ? _config.iconDefaultSize : height;
-    _instructionEndTime = 0; // Sem expiração automática
-    _transitionState = TransitionState::CLOSING;
-}
-
 void DisplayOrchestrator::clearInstruction()
 {
     _pendingIcon = nullptr;
@@ -147,12 +136,13 @@ void DisplayOrchestrator::clearInstruction()
 }
 
 /**
- * @section Comandos de Expressão Facial
+ * @section Facial Expression Commands
  */
 
 void DisplayOrchestrator::setEyeMood(eEmotions mood)
 {
-    // Se mudarmos o humor e houver um ícone ativo, fechamos o zíper primeiro!
+    // If we change the mood while an icon is active, close the zipper
+    // first!
     if (_currentInstructionIcon != nullptr || _pendingIcon != nullptr)
     {
         _pendingIcon = nullptr;
@@ -168,18 +158,13 @@ void DisplayOrchestrator::playConfused() { _eyes.playConfused(); }
 void DisplayOrchestrator::playHappy() { _eyes.playHappy(); }
 
 /**
- * @section Gestão do Sistema de Partículas
- * Controla os efeitos atmosféricos que ambientam o ritual de lavagem.
+ * @section Particle System Management
+ * Controls the atmospheric effects that set the mood for the wash ritual.
  */
 
 void DisplayOrchestrator::setParticleEffect(EffectType type)
 {
     _animations.setEffect(type);
-}
-
-void DisplayOrchestrator::setParticleSpawnChance(int chance)
-{
-    _animations.setSpawnChance(chance);
 }
 
 void DisplayOrchestrator::setDebugText(const String& text)
@@ -188,9 +173,8 @@ void DisplayOrchestrator::setDebugText(const String& text)
 }
 
 /**
- * @section Gerenciamento de Energia
- * Permite colocar o display em modo de economia de energia (desligado) ou
- * acordá-lo.
+ * @section Power Management
+ * Allows putting the display into power-save mode (off) or waking it up.
  */
 
 void DisplayOrchestrator::prepareForSleep()
@@ -201,10 +185,4 @@ void DisplayOrchestrator::prepareForSleep()
     Serial.println(
         F("[DISPLAY] Memoria limpa e driver em modo economia (Display OFF).")
     );
-}
-
-void DisplayOrchestrator::wakeUp()
-{
-    u8g2.setPowerSave(0);
-    Serial.println(F("[DISPLAY] Driver acordado (Display ON)."));
 }

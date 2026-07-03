@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <math.h>
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 BubbleParticle::BubbleParticle(
     float startX,
@@ -14,34 +14,34 @@ BubbleParticle::BubbleParticle(
     x = startX;
     y = startY;
 
-    // Variação de raio para diversidade visual
+    // Radius variation for visual diversity
     radius = _cfg.minRadius + (float)(random(0, 100) / 100.0f) *
                                   (_cfg.maxRadius - _cfg.minRadius);
 
-    // Velocidade de subida (vertical negativa no sistema da tela)
+    // Rise speed (negative vertical in the screen's coordinate system)
     speed = _cfg.minSpeed +
             (float)(random(0, 100) / 100.0f) * (_cfg.maxSpeed - _cfg.minSpeed);
 
-    // Offset de fase para trajetórias senoidais variadas
+    // Phase offset for varied sinusoidal trajectories
     offset = (float)random(0, 360);
     isPopping = false;
     popTimer = 0.0f;
 }
 
-/** @section Física e Lógica */
+/** @section Physics and Logic */
 
 bool BubbleParticle::update(float deltaTime, int screenWidth, int screenHeight)
 {
     if (!isPopping)
     {
-        // Movimento vertical uniforme
+        // Uniform vertical movement
         y -= speed * deltaTime;
 
-        // Oscilação horizontal senoidal
+        // Sinusoidal horizontal oscillation
         x += sin(millis() * _cfg.oscillationSpeed + offset) *
              _cfg.oscillationAmp;
 
-        // Lógica de estouro: saída da tela ou fragilidade estatística
+        // Pop logic: leaving the screen or statistical fragility
         if (y < -radius || (y < (screenHeight / 2) && random(0, 1000) < 5))
         {
             isPopping = true;
@@ -50,13 +50,13 @@ bool BubbleParticle::update(float deltaTime, int screenWidth, int screenHeight)
     }
     else
     {
-        // Animação transiente de estouro
+        // Transient pop animation
         popTimer += deltaTime;
         return (popTimer < 0.1f);
     }
 }
 
-/** @section Renderização */
+/** @section Rendering */
 
 void BubbleParticle::draw(U8G2& display)
 {
@@ -68,7 +68,7 @@ void BubbleParticle::draw(U8G2& display)
     {
         display.drawCircle(ix, iy, ir);
 
-        // Brilho reflexivo conforme o tamanho
+        // Reflective highlight based on the size
         if (ir == 2)
         {
             display.drawPixel(ix - 1, iy - 1);
@@ -90,7 +90,7 @@ void BubbleParticle::draw(U8G2& display)
     }
     else
     {
-        // Efeito visual de dispersão radial do estouro
+        // Radial dispersion visual effect for the pop
         int spread = (int)(popTimer * 50.0f) + 1;
         display.drawPixel(ix - spread, iy - spread);
         display.drawPixel(ix + spread, iy - spread);

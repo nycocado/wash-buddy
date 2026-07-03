@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <math.h>
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 ConfettiParticle::ConfettiParticle(
     float startX,
@@ -14,7 +14,7 @@ ConfettiParticle::ConfettiParticle(
     x = startX;
     y = startY;
 
-    // Trajetória inicial em ângulo aleatório
+    // Random-angle initial trajectory
     float angle = (float)random(0, 360) * (M_PI / 180.0f);
     float mag = _cfg.minSpeed + (float)(random(0, 100) / 100.0f) *
                                     (_cfg.maxSpeed - _cfg.minSpeed);
@@ -22,13 +22,13 @@ ConfettiParticle::ConfettiParticle(
     vx = cos(angle) * mag;
     vy = sin(angle) * mag;
 
-    // Diversidade visual: tamanho e giro
+    // Visual diversity: size and spin
     size = (float)random(2, 5);
     spinSpeed = (float)random(5, 20);
     spinPhase = (float)random(0, 314) / 100.0f;
 }
 
-/** @section Física e Lógica */
+/** @section Physics and Logic */
 
 bool ConfettiParticle::update(
     float deltaTime,
@@ -36,27 +36,27 @@ bool ConfettiParticle::update(
     int screenHeight
 )
 {
-    // Integração simples de Euler
+    // Simple Euler integration
     x += vx * deltaTime;
     y += vy * deltaTime;
 
-    // Gravidade e Resistência do ar
+    // Gravity and air resistance
     vy += _cfg.gravity * deltaTime;
     vx *= _cfg.airResistance;
     vy *= _cfg.airResistance;
 
-    // Rotação visual (flicker)
+    // Visual rotation (flicker)
     spinPhase += spinSpeed * deltaTime;
 
-    // Condição de morte: sair pelas bordas
+    // Death condition: leaving through the edges
     return (y < screenHeight && x >= -5 && x <= screenWidth + 5);
 }
 
-/** @section Renderização */
+/** @section Rendering */
 
 void ConfettiParticle::draw(U8G2& display)
 {
-    // Projeção 3D simplificada (largura oscilante)
+    // Simplified 3D projection (oscillating width)
     float currentWidth = abs(cos(spinPhase)) * size;
 
     int drawW = max(1, (int)currentWidth);

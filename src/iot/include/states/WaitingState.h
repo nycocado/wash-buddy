@@ -3,63 +3,63 @@
 
 /**
  * @class WaitingState
- * @brief Estado de espera ativa por interações durante o ritual.
+ * @brief Active waiting state for interactions during the ritual.
  *
- * Este estado é acionado quando uma etapa do ritual termina e o robô aguarda
- * que a criança aproxime a próxima tag RFID (ex: após molhar, espera o sabão).
- * Se a espera for muito longa (timeout), o robô assume que o ritual foi
- * abandonado e se desliga.
+ * This state is triggered when a ritual stage ends and the robot waits
+ * for the child to bring the next RFID tag close (e.g. after wetting,
+ * waits for the soap). If the wait is too long (timeout), the robot
+ * assumes the ritual was abandoned and shuts itself down.
  *
- * O robô demonstra impaciência crescente através de expressões "preocupadas"
- * e depois "tristes", incentivando o retorno à atividade.
+ * The robot shows growing impatience through "worried" and then "sad"
+ * expressions, encouraging the child to return to the activity.
  */
 class WaitingState : public State
 {
     public:
         /**
-         * @brief Inicia o estado de espera e exibe a instrução da próxima
-         * etapa.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Starts the waiting state and shows the next stage's
+         * instruction.
+         * @param controller Pointer to the central game controller.
          */
         void enter(GameController* controller) override;
 
         /**
-         * @brief Gerencia a evolução do humor e o timeout de inatividade.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Manages the mood evolution and the inactivity timeout.
+         * @param controller Pointer to the central game controller.
          */
         void update(GameController* controller) override;
 
         /**
-         * @brief Finaliza os comportamentos de espera ao sair.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Ends the waiting behaviors on exit.
+         * @param controller Pointer to the central game controller.
          */
         void exit(GameController* controller) override;
 
         /**
-         * @brief Valida se a tag lida corresponde ao próximo passo ou repetição
-         * da etapa.
-         * @param controller Ponteiro para o controlador de jogo.
-         * @param uid Identificador da tag detectada.
+         * @brief Validates whether the tag that was read matches the next
+         * step or a repeat of the current stage.
+         * @param controller Pointer to the game controller.
+         * @param uid Identifier of the detected tag.
          */
         void handleRFID(GameController* controller, const String& uid) override;
 
         /**
-         * @brief Retorna o enum RobotState::WAITING.
-         * @return RobotState O estado de espera.
+         * @brief Returns the RobotState::WAITING enum.
+         * @return RobotState The waiting state.
          */
         RobotState getStateEnum() const override { return RobotState::WAITING; }
 
     private:
         bool _isWorriedPhase =
-            false; ///< Indica se o robô começou a procurar o usuário.
+            false; ///< Whether the robot started looking for the user.
         bool _isSadPhase =
-            false; ///< Indica se o robô entrou em fase de decepção.
+            false; ///< Whether the robot entered the disappointment phase.
 
         const uint8_t* _nextIcon =
-            nullptr; ///< Ícone da próxima etapa pedagógica.
+            nullptr; ///< Icon for the next pedagogical stage.
         unsigned long _lastReminderTime =
-            0; ///< Timestamp do último lembrete visual.
+            0; ///< Timestamp of the last visual reminder.
         bool _waitingAudioPlayed =
-            false; ///< Se o áudio de início da espera já tocou.
-        bool _sadAudioPlayed = false; ///< Se o áudio triste já tocou.
+            false; ///< Whether the waiting-start audio already played.
+        bool _sadAudioPlayed = false; ///< Whether the sad audio already played.
 };

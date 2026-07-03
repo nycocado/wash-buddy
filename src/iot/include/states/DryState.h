@@ -3,54 +3,55 @@
 
 /**
  * @class DryState
- * @brief Etapa final do ritual: Secagem das mãos.
+ * @brief Final ritual stage: drying the hands.
  *
- * Este estado é ativado quando a criança aproxima a tag da Toalha (Towel).
- * O robô simula a finalização da limpeza através de efeitos de vento e
- * comportamentos de satisfação.
+ * This state is activated when the child brings the towel tag close. The
+ * robot simulates the completion of the cleaning process through wind
+ * effects and satisfaction behaviors.
  *
- * Feedback Visual: Efeito de partículas de vento (Wind).
- * Feedback Físico: O robô executa movimentos de cabeça simulando o
- * acompanhamento do uso da toalha.
+ * Visual feedback: wind particle effect.
+ * Physical feedback: the robot performs head movements simulating that it
+ * is following the towel use.
  */
 class DryState : public State
 {
     public:
         /**
-         * @brief Inicia o efeito de vento e a sonorização de secagem.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Starts the wind effect and the drying sound.
+         * @param controller Pointer to the central game controller.
          */
         void enter(GameController* controller) override;
 
         /**
-         * @brief Gerencia o tempo de secagem e avança para a celebração final.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Manages the drying time and advances to the final
+         * celebration.
+         * @param controller Pointer to the central game controller.
          */
         void update(GameController* controller) override;
 
         /**
-         * @brief Encerra os efeitos de vento e animações de secagem.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Ends the wind effects and drying animations.
+         * @param controller Pointer to the central game controller.
          */
         void exit(GameController* controller) override;
 
         /**
-         * @brief Valida se a toalha foi usada corretamente ou se a etapa deve
-         * repetir.
-         * @param controller Ponteiro para o controlador de jogo.
-         * @param uid Identificador da tag detectada.
+         * @brief Validates whether the towel was used correctly or the
+         * stage must repeat.
+         * @param controller Pointer to the game controller.
+         * @param uid Identifier of the detected tag.
          */
         void handleRFID(GameController* controller, const String& uid) override;
 
         /**
-         * @brief Retorna o enum RobotState::DRY.
-         * @return RobotState O estado de secagem.
+         * @brief Returns the RobotState::DRY enum.
+         * @return RobotState The drying state.
          */
         RobotState getStateEnum() const override { return RobotState::DRY; }
 
         /**
-         * @brief Retorna o tempo pedagógico configurado para a secagem.
-         * @return unsigned long Tempo em milissegundos.
+         * @brief Returns the pedagogical time configured for drying.
+         * @return unsigned long Time in milliseconds.
          */
         unsigned long getTimeout() const override
         {

@@ -4,44 +4,44 @@
 
 /**
  * @struct WindSettings
- * @brief Configurações físicas para o efeito de Vento.
+ * @brief Physical settings for the wind effect.
  */
 struct WindSettings
 {
-        float minSpeed = 150.0f; ///< Velocidade horizontal mínima (px/s).
-        float maxSpeed = 250.0f; ///< Velocidade horizontal máxima (px/s).
-        float minLength = 5.0f;  ///< Comprimento mínimo da rajada.
-        float maxLength = 20.0f; ///< Comprimento máximo da rajada.
+        float minSpeed = 150.0f; ///< Minimum horizontal speed (px/s).
+        float maxSpeed = 250.0f; ///< Maximum horizontal speed (px/s).
+        float minLength = 5.0f;  ///< Minimum gust length.
+        float maxLength = 20.0f; ///< Maximum gust length.
 };
 
 /**
  * @class WindParticle
- * @brief Partícula de vento com movimento ondulado.
+ * @brief Wind particle with wavy motion.
  *
- * Simula rajadas de ar através de linhas que oscilam verticalmente.
+ * Simulates air gusts through lines that oscillate vertically.
  */
 class WindParticle : public Particle
 {
     public:
         /**
-         * @brief Construtor da rajada.
-         * @param startX Posição horizontal inicial.
-         * @param startY Posição vertical de base.
-         * @param cfg Configurações de vento.
+         * @brief Gust constructor.
+         * @param startX Initial horizontal position.
+         * @param startY Base vertical position.
+         * @param cfg Wind settings.
          */
         WindParticle(float startX, float startY, const WindSettings& cfg);
 
         /**
-         * @brief Atualiza a translação horizontal.
-         * @param deltaTime Tempo decorrido (segundos).
-         * @param screenWidth Largura da tela.
-         * @param screenHeight Altura da tela.
-         * @return True se a rajada ainda está visível.
+         * @brief Updates the horizontal translation.
+         * @param deltaTime Time elapsed (seconds).
+         * @param screenWidth Screen width.
+         * @param screenHeight Screen height.
+         * @return True if the gust is still visible.
          */
         bool
         update(float deltaTime, int screenWidth, int screenHeight) override;
 
-        /** @brief Renderiza a linha ondulada ponto a ponto. */
+        /** @brief Renders the wavy line point by point. */
         void draw(U8G2& display) override;
 
     private:

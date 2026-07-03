@@ -14,33 +14,33 @@ class State;
 
 /**
  * @class GameController
- * @brief Contexto central da Máquina de Estados Finita (FSM) e gerenciador de
- * hardware.
+ * @brief Central context of the Finite State Machine (FSM) and hardware
+ * manager.
  *
- * Esta classe é o "cérebro" do Wash-Buddy. Ela coordena a transição entre os
- * diferentes estados do ritual de lavagem de mãos, mantém as referências para
- * todos os controladores de hardware (Display, Movimento, RFID, Audio, Power) e
- * aplica as regras de negócio globais.
+ * This class is the "brain" of Wash-Buddy. It coordinates the transitions
+ * between the different states of the hand-washing ritual, holds the
+ * references to every hardware controller (Display, Motion, RFID, Audio,
+ * Power), and applies the global business rules.
  *
- * Entre suas responsabilidades estão:
- * - Gerenciar o ciclo de vida dos estados (Enter, Update, Exit).
- * - Controlar o limite de repetições de cada etapa para evitar loops infinitos
- * ou uso indevido.
- * - Prover acesso centralizado ao hardware para os objetos de Estado.
+ * Among its responsibilities:
+ * - Manage the lifecycle of the states (Enter, Update, Exit).
+ * - Control the repeat limit of each stage to avoid infinite loops or
+ * misuse.
+ * - Provide centralized hardware access to the State objects.
  */
 class GameController
 {
     public:
         /**
-         * @brief Construtor do GameController.
+         * @brief GameController constructor.
          *
-         * Inicializa as referências de hardware e aloca o pool de estados.
+         * Initializes the hardware references and allocates the state pool.
          *
-         * @param display Referência para o orquestrador do display OLED.
-         * @param motion Referência para o controlador de servos e animações.
-         * @param rfid Referência para o leitor de tags RFID.
-         * @param audio Referência para o controlador de áudio DFPlayer.
-         * @param power Referência para o controlador de energia principal.
+         * @param display Reference to the OLED display orchestrator.
+         * @param motion Reference to the servo and animation controller.
+         * @param rfid Reference to the RFID tag reader.
+         * @param audio Reference to the DFPlayer audio controller.
+         * @param power Reference to the main power controller.
          */
         GameController(
             DisplayOrchestrator& display,
@@ -51,203 +51,202 @@ class GameController
         );
 
         /**
-         * @brief Destrutor para liberação de memória dos estados alocados.
+         * @brief Destructor that frees the memory allocated for the states.
          *
-         * Garante que todas as instâncias no array _states sejam deletadas.
+         * Ensures every instance in the _states array is deleted.
          */
         ~GameController();
 
         /**
-         * @brief Inicializa o controlador e define o estado inicial.
+         * @brief Initializes the controller and sets the initial state.
          *
-         * Configura o estado de BOOT como o ponto de entrada da FSM.
+         * Configures the BOOT state as the FSM's entry point.
          */
         void init();
 
         /**
-         * @brief Loop principal de processamento do controlador.
+         * @brief Main processing loop of the controller.
          *
-         * Deve ser chamado repetidamente no loop() principal do Arduino.
-         * Atualiza o estado atual, processa o botão de debug e o motor de
-         * comportamento.
+         * Must be called repeatedly from the Arduino main loop(). Updates
+         * the current state, processes the debug button, and the behavior
+         * engine.
          */
         void update();
 
         /**
-         * @brief Processa uma tag RFID lida de forma assíncrona.
+         * @brief Processes an RFID tag read asynchronously.
          *
-         * Delega a lógica de tratamento para o estado atual da FSM.
+         * Delegates the handling logic to the current FSM state.
          *
-         * @param uid A string contendo o UID da tag lida.
+         * @param uid The string containing the UID of the tag that was read.
          */
         void processRFIDTag(const String& uid);
 
         /**
-         * @brief Altera o estado atual da FSM usando um ponteiro direto.
+         * @brief Changes the current FSM state using a direct pointer.
          *
-         * @param newState Ponteiro para a nova instância de Estado.
+         * @param newState Pointer to the new State instance.
          */
         void changeState(State* newState);
 
         /**
-         * @brief Altera o estado atual da FSM usando a enumeração.
+         * @brief Changes the current FSM state using the enum.
          *
-         * Inclui a lógica de validação de repetições permitidas no ritual.
+         * Includes the validation logic for the repeats allowed during the
+         * ritual.
          *
-         * @param stateEnum Identificador do novo estado desejado.
+         * @param stateEnum Identifier of the desired new state.
          */
         void changeState(RobotState stateEnum);
 
         /**
-         * @brief Retorna o identificador do estado em execução no momento.
+         * @brief Returns the identifier of the state currently running.
          *
-         * @return RobotState Enumeração do estado atual.
+         * @return RobotState Enum of the current state.
          */
         RobotState getCurrentStateEnum() const;
 
         /**
-         * @brief Retorna o último estado do ritual que foi executado com
-         * sucesso.
+         * @brief Returns the last ritual state that was executed
+         * successfully.
          *
-         * @return RobotState O último estado ritualístico registrado.
+         * @return RobotState The last recorded ritual state.
          */
         RobotState getLastRitualState() const { return _lastRitualState; }
 
         /**
-         * @brief Verifica se um determinado estado faz parte do ritual de
-         * lavagem.
+         * @brief Checks whether a given state is part of the wash ritual.
          *
-         * @param state O estado a ser verificado.
-         * @return true Se for um estado de ritual (WET, SOAP, etc.), false caso
-         * contrário.
+         * @param state The state to check.
+         * @return true If it is a ritual state (WET, SOAP, etc.), false
+         * otherwise.
          */
         static bool isRitualState(RobotState state);
 
         /**
-         * @brief Converte um valor da enumeração RobotState em uma string
-         * legível.
+         * @brief Converts a RobotState enum value into a readable string.
          *
-         * @param state O estado para conversão.
-         * @return const char* Nome textual do estado (ex: "IDLE").
+         * @param state The state to convert.
+         * @return const char* Textual name of the state (e.g. "IDLE").
          */
         static const char* getStateName(RobotState state);
 
         /**
-         * @brief Tenta repetir o último estado do ritual executado.
+         * @brief Attempts to repeat the last executed ritual state.
          *
-         * Utilizado quando uma tag de repetição é detectada.
+         * Used when a repeat tag is detected.
          */
         void handleRepeat();
 
         /**
-         * @brief Retorna o estado anterior à última transição.
+         * @brief Returns the state prior to the last transition.
          *
-         * @return State* Ponteiro para o estado anterior.
+         * @return State* Pointer to the previous state.
          */
         State* getPreviousState() const { return _previousState; }
 
         /**
-         * @brief Retorna o timestamp de quando o estado atual foi iniciado.
+         * @brief Returns the timestamp of when the current state started.
          *
-         * @return unsigned long Tempo em milissegundos (millis).
+         * @return unsigned long Time in milliseconds (millis).
          */
         unsigned long getStateStartTime() const { return _stateStartTime; }
 
         /**
-         * @brief Provê acesso ao orquestrador de display.
+         * @brief Provides access to the display orchestrator.
          *
-         * @return DisplayOrchestrator& Referência para o objeto de display.
+         * @return DisplayOrchestrator& Reference to the display object.
          */
         DisplayOrchestrator& getDisplay() { return _display; }
 
         /**
-         * @brief Provê acesso ao controlador de movimento.
+         * @brief Provides access to the motion controller.
          *
-         * @return MotionController& Referência para o controlador de servos.
+         * @return MotionController& Reference to the servo controller.
          */
         MotionController& getMotion() { return _motion; }
 
         /**
-         * @brief Provê acesso ao leitor RFID.
+         * @brief Provides access to the RFID reader.
          *
-         * @return RFIDReader& Referência para o objeto de sensor RFID.
+         * @return RFIDReader& Reference to the RFID sensor object.
          */
         RFIDReader& getRFID() { return _rfid; }
 
         /**
-         * @brief Provê acesso ao controlador de áudio e música.
+         * @brief Provides access to the audio controller.
          *
-         * @return AudioController& Referência para o controlador DFPlayer.
+         * @return AudioController& Reference to the DFPlayer controller.
          */
         AudioController& getAudio() { return _audio; }
 
         /**
-         * @brief Provê acesso ao controlador de energia.
+         * @brief Provides access to the power controller.
          *
-         * @return PowerController& Referência para o controlador de energia.
+         * @return PowerController& Reference to the power controller.
          */
         PowerController& getPower() { return _power; }
 
         /**
-         * @brief Provê acesso ao motor de comportamentos aleatórios.
+         * @brief Provides access to the random behavior engine.
          *
-         * @return BehaviorEngine& Referência para o motor de animações
-         * orgânicas.
+         * @return BehaviorEngine& Reference to the organic animation engine.
          */
         BehaviorEngine& getBehaviors() { return _behaviors; }
 
         /**
-         * @brief Processa a lógica do botão físico de debug.
+         * @brief Processes the physical debug button logic.
          *
-         * Detecta pressionamentos curtos e longos para troca de modo e estados.
+         * Detects short and long presses to toggle debug mode and states.
          */
         void processDebugButton();
 
         /**
-         * @brief Encerra todas as interações e atividades, centraliza os
-         * motores e chama o desligamento do sistema no módulo de energia.
+         * @brief Ends all interactions and activities, centers the motors,
+         * and calls the system shutdown on the power module.
          */
         void shutdownSystem();
 
     private:
-        DisplayOrchestrator& _display; ///< Orquestrador visual
-        MotionController& _motion;     ///< Controlador físico (servos)
-        RFIDReader& _rfid;             ///< Sensor de entrada (tags)
-        AudioController& _audio;       ///< Controlador de áudio
-        PowerController& _power;       ///< Controlador de energia principal
-        BehaviorEngine _behaviors;     ///< Motor de vida orgânica
+        DisplayOrchestrator& _display; ///< Visual orchestrator
+        MotionController& _motion;     ///< Physical controller (servos)
+        RFIDReader& _rfid;             ///< Input sensor (tags)
+        AudioController& _audio;       ///< Audio controller
+        PowerController& _power;       ///< Main power controller
+        BehaviorEngine _behaviors;     ///< Organic life engine
 
-        State* _currentState;  ///< Estado em execução
-        State* _previousState; ///< Estado anterior para referência
+        State* _currentState;  ///< State currently running
+        State* _previousState; ///< Previous state for reference
         RobotState _lastRitualState =
-            RobotState::BOOT; ///< Memória do progresso ritualístico
+            RobotState::BOOT; ///< Memory of the ritual's progress
 
-        unsigned long _stateStartTime; ///< Timestamp de início do estado atual
+        unsigned long
+            _stateStartTime; ///< Timestamp of the current state's start
         int _repeatCount =
-            0; ///< Contador de tentativas consecutivas no mesmo estado
+            0; ///< Counter of consecutive attempts on the same state
 
         bool _isShuttingDown =
-            false; ///< Indica se o sistema está em processo de desligamento
+            false; ///< Indicates whether the system is shutting down
 
-        // As instâncias no pool agora usam o STATE_COUNT dinâmico
+        // The pool instances now use the dynamic STATE_COUNT
         State* _states[static_cast<int>(RobotState::STATE_COUNT)];
 
-        // Variáveis de controle de Debug
+        // Debug control variables
         bool _isDebugMode = false;
         unsigned long _buttonPressTime = 0;
         bool _buttonWasPressed = false;
         bool _debugToggleHandled = false;
         unsigned long _debugTextClearTime =
-            0; ///< Timer para limpar mensagens temporárias da tela
+            0; ///< Timer to clear temporary debug messages from the screen
 
         /**
-         * @brief Aloca e inicializa todas as instâncias de estado no array
-         * _states.
+         * @brief Allocates and initializes every state instance in the
+         * _states array.
          */
         void initializeStates();
 
         /**
-         * @brief Reseta o progresso e contadores do ritual.
+         * @brief Resets the ritual's progress and counters.
          */
         void resetRitualProgress();
 };

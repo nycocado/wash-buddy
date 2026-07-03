@@ -10,7 +10,7 @@
 #include "states/WaitingState.h"
 #include "states/WetState.h"
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 GameController::GameController(
     DisplayOrchestrator& display,
@@ -23,15 +23,15 @@ GameController::GameController(
       _power(power), _currentState(nullptr), _previousState(nullptr),
       _lastRitualState(RobotState::BOOT), _stateStartTime(0), _repeatCount(0)
 {
-    // Alocação estática dos estados para evitar fragmentação de memória durante
-    // o ritual pedagógico.
+    // Static allocation of the states to avoid memory fragmentation during
+    // the pedagogical ritual.
     initializeStates();
 }
 
 GameController::~GameController()
 {
-    // Limpeza de memória: deleta todas as instâncias de estado alocadas via
-    // 'new' no pool de estados.
+    // Memory cleanup: deletes every state instance allocated via 'new' in
+    // the state pool.
     for (int i = 0; i < static_cast<int>(RobotState::STATE_COUNT); i++)
     {
         if (_states[i] != nullptr)
@@ -58,43 +58,42 @@ void GameController::initializeStates()
 
 void GameController::init()
 {
-    // Inicia a FSM no estado de Boot para sincronização de hardware.
+    // Starts the FSM in the Boot state to synchronize hardware.
     changeState(RobotState::BOOT);
 }
 
-/** @section Processamento de Loop (Update) */
+/** @section Loop Processing (Update) */
 
 void GameController::update()
 {
-    // Se o robô está em processo de desligamento, suspende todo o processamento
-    // lógico.
+    // If the robot is shutting down, suspend all logic processing.
     if (_isShuttingDown)
         return;
 
-    // Limpa mensagens temporárias de debug após o tempo expirar.
+    // Clears temporary debug messages once their time expires.
     if (_debugTextClearTime > 0 && millis() > _debugTextClearTime)
     {
         _display.setDebugText("");
         _debugTextClearTime = 0;
     }
 
-    // Processa a lógica do botão de debug de forma independente da FSM.
+    // Processes the debug button logic independently from the FSM.
     processDebugButton();
 
-    // --- MOTOR DE COMPORTAMENTO (VIDA ORGÂNICA) ---
-    // O motor é pausado automaticamente se houver um ícone/instrução na tela
-    // para não distrair a criança da tarefa pedagógica.
+    // --- BEHAVIOR ENGINE (ORGANIC LIFE) ---
+    // The engine is automatically paused whenever an icon/instruction is on
+    // screen, so it never distracts the child from the pedagogical task.
     _behaviors.setPaused(_display.isInstructionActive());
     _behaviors.update(_display, _motion, _audio);
 
-    // Ciclo de vida: Atualização lógica do estado atual (Update Loop)
+    // Lifecycle: logic update of the current state (Update Loop)
     if (_currentState)
     {
         _currentState->update(this);
     }
 }
 
-/** @section Interação Humano-Robô (Entradas) */
+/** @section Human-Robot Interaction (Inputs) */
 
 void GameController::processDebugButton()
 {
@@ -104,20 +103,20 @@ void GameController::processDebugButton()
     {
         if (!_buttonWasPressed)
         {
-            // Detecção de borda de subida (Botão pressionado agora)
+            // Rising edge detection (button pressed now)
             _buttonPressTime = millis();
             _buttonWasPressed = true;
             _debugToggleHandled = false;
         }
         else if (!_debugToggleHandled)
         {
-            // O botão continua sendo segurado pelo usuário.
+            // The button is still being held down.
             unsigned long pressDuration = millis() - _buttonPressTime;
 
             if (pressDuration >= GameConfig::DEBUG_LONG_PRESS_MS)
             {
-                // Toggle do Modo Debug acontece imediatamente ao atingir o
-                // tempo limite configurado.
+                // Debug mode toggles immediately once the configured
+                // threshold is reached.
                 _isDebugMode = !_isDebugMode;
                 _debugToggleHandled = true;
 
@@ -126,13 +125,14 @@ void GameController::processDebugButton()
                     Serial.println(F("[DEBUG] Modo Debug ATIVADO."));
                     _debugTextClearTime = 0;
 
-                    // Força a tela a mostrar que entrou em debug antes da
-                    // transição.
+                    // Forces the screen to show that debug mode was entered
+                    // before the transition happens.
                     _display.setDebugText(
                         String(F("DEBUG: ")) + getStateName(RobotState::IDLE)
                     );
 
-                    // Retorna ao Idle por segurança ao entrar em modo técnico.
+                    // Returns to Idle for safety when entering technical
+                    // mode.
                     changeState(RobotState::IDLE);
                 }
                 else
@@ -144,8 +144,12 @@ void GameController::processDebugButton()
                     changeState(RobotState::IDLE);
                 }
             }
-            // Feedback visual de "Aguarde" enquanto o usuário segura o botão.
-            else if (!_isDebugMode && pressDuration > GameConfig::DEBUG_HOLD_FEEDBACK_MS)
+            // Visual "Hold" feedback while the user keeps the button
+            // pressed.
+            else if (
+                !_isDebugMode &&
+                pressDuration > GameConfig::DEBUG_HOLD_FEEDBACK_MS
+            )
             {
                 _display.setDebugText(F("HOLD..."));
                 _debugTextClearTime =
@@ -155,11 +159,11 @@ void GameController::processDebugButton()
     }
     else if (_buttonWasPressed)
     {
-        // Detecção de borda de descida (Botão solto agora)
+        // Falling edge detection (button released now)
         unsigned long pressDuration = millis() - _buttonPressTime;
         _buttonWasPressed = false;
 
-        // Limpa o texto de "HOLD..." se o usuário desistiu de segurar.
+        // Clears the "HOLD..." text if the user gave up holding the button.
         if (!_debugToggleHandled && !_isDebugMode &&
             pressDuration > GameConfig::DEBUG_DEBOUNCE_MS &&
             pressDuration < GameConfig::DEBUG_LONG_PRESS_MS)
@@ -168,15 +172,14 @@ void GameController::processDebugButton()
             _debugTextClearTime = 0;
         }
 
-        // Processamento de clique curto (Short Press) para pular estados em
-        // modo técnico.
+        // Short-press processing to skip states while in technical mode.
         if (!_debugToggleHandled &&
             pressDuration > GameConfig::DEBUG_DEBOUNCE_MS)
         {
             if (_isDebugMode)
             {
                 int currentStateInt = static_cast<int>(getCurrentStateEnum());
-                // Avança ciclicamente no pool de estados.
+                // Advances cyclically through the state pool.
                 int nextStateInt = (currentStateInt + 1) %
                                    static_cast<int>(RobotState::STATE_COUNT);
                 RobotState nextState = static_cast<RobotState>(nextStateInt);
@@ -188,8 +191,10 @@ void GameController::processDebugButton()
             }
             else
             {
-                Serial.println(F("[DEBUG] Botão pressionado (Segure para "
-                                 "entrar no modo técnico)."));
+                Serial.println(
+                    F("[DEBUG] Botão pressionado (Segure para "
+                      "entrar no modo técnico).")
+                );
             }
         }
     }
@@ -200,15 +205,15 @@ void GameController::processRFIDTag(const String& uid)
     if (_isShuttingDown)
         return;
 
-    // Proteção: Ignora interações físicas se o robô estiver sob teste técnico.
+    // Guard: ignore physical interactions while the robot is under
+    // technical testing.
     if (_isDebugMode)
     {
         Serial.println(F("[DEBUG] Tag ignorada."));
         return;
     }
 
-    // Proteção Pedagógica: Ignora tags enquanto uma etapa obrigatória está em
-    // curso.
+    // Pedagogical guard: ignore tags while a mandatory stage is in progress.
     if (isRitualState(getCurrentStateEnum()))
     {
         Serial.println(F("[FSM] Tag ignorada: Etapa em andamento."));
@@ -218,33 +223,35 @@ void GameController::processRFIDTag(const String& uid)
     Serial.print(F("[RFID] Tag Detectada: "));
     Serial.println(uid);
 
-    // Delega o tratamento da tag para o estado atual da FSM.
+    // Delegates the tag handling to the current FSM state.
     if (_currentState)
     {
         _currentState->handleRFID(this, uid);
     }
 }
 
-/** @section Gerenciamento da Máquina de Estados (FSM) */
+/** @section State Machine (FSM) Management */
 
 void GameController::changeState(RobotState stateEnum)
 {
-    // Lógica Pedagógica: Gerenciamento de Repetições
-    // Previne que a criança fique presa em um loop infinito de uma única etapa.
+    // Pedagogical logic: repeat management.
+    // Prevents the child from getting stuck in an infinite loop on a single
+    // stage.
     if (isRitualState(stateEnum))
     {
         if (stateEnum != _lastRitualState)
         {
-            // Iniciou uma nova etapa: reseta contadores de progresso local.
+            // A new stage started: resets the local progress counters.
             resetRitualProgress();
             _lastRitualState = stateEnum;
         }
         else
         {
-            // Tentativa de repetir a mesma etapa consecutivamente.
+            // Attempt to repeat the same stage consecutively.
             _repeatCount++;
 
-            // Se exceder o limite, redireciona para o estado de Erro/Atenção.
+            // If the limit is exceeded, redirect to the Error/Attention
+            // state.
             if (_repeatCount > 1)
             {
                 Serial.println(F("[FSM] Erro: Limite de repetição excedido."));
@@ -252,20 +259,24 @@ void GameController::changeState(RobotState stateEnum)
             }
         }
     }
-    // Estados globais resetam o progresso para permitir novos ciclos de ritual.
-    else if (stateEnum == RobotState::IDLE || stateEnum == RobotState::BOOT || stateEnum == RobotState::SUCCESS)
+    // Global states reset the progress to allow new ritual cycles.
+    else if (
+        stateEnum == RobotState::IDLE || stateEnum == RobotState::BOOT ||
+        stateEnum == RobotState::SUCCESS
+    )
     {
         resetRitualProgress();
     }
 
-    // Resolve o ponteiro do estado via pool estático e aplica a transição.
+    // Resolves the state pointer via the static pool and applies the
+    // transition.
     int index = static_cast<int>(stateEnum);
     changeState(_states[index]);
 }
 
 void GameController::changeState(State* newState)
 {
-    // Sincroniza o overlay de debug com o nome do estado atual.
+    // Synchronizes the debug overlay with the current state's name.
     if (_isDebugMode && newState != nullptr)
     {
         _display.setDebugText(
@@ -273,23 +284,23 @@ void GameController::changeState(State* newState)
         );
     }
 
-    // Otimização: Evita transições para o mesmo estado (exceto rituais
-    // permitidos).
+    // Optimization: avoid transitioning into the same state (except for
+    // allowed ritual repeats).
     if (_currentState == newState && !isRitualState(newState->getStateEnum()))
         return;
 
-    // --- CICLO DE VIDA: SAÍDA (EXIT) ---
+    // --- LIFECYCLE: EXIT ---
     if (_currentState != nullptr)
     {
         _currentState->exit(this);
         _previousState = _currentState;
     }
 
-    // --- ATUALIZAÇÃO DE CONTEXTO ---
+    // --- CONTEXT UPDATE ---
     _currentState = newState;
     _stateStartTime = millis();
 
-    // Log padronizado de transição de estado.
+    // Standardized transition log.
     Serial.print(F("[FSM] Transição -> "));
     Serial.print(getStateName(_currentState->getStateEnum()));
     if (isRitualState(_currentState->getStateEnum()))
@@ -300,16 +311,16 @@ void GameController::changeState(State* newState)
     }
     Serial.println();
 
-    // --- RESET DE HARDWARE E VISUAL PARA NOVO ESTADO ---
-    // Limpa instruções, partículas e sons do estado anterior para evitar
-    // poluição sensorial.
+    // --- HARDWARE AND VISUAL RESET FOR THE NEW STATE ---
+    // Clears instructions, particles, and sounds from the previous state to
+    // avoid sensory clutter.
     _display.clearInstruction();
     _display.setParticleEffect(EffectType::NONE);
     _audio.stop();
     _motion.stopAllAnimations();
     _motion.centerAll();
 
-    // --- CICLO DE VIDA: ENTRADA (ENTER) ---
+    // --- LIFECYCLE: ENTER ---
     if (_currentState != nullptr)
     {
         _currentState->enter(this);
@@ -318,11 +329,11 @@ void GameController::changeState(State* newState)
 
 void GameController::handleRepeat()
 {
-    // Força o retorno ao último estado pedagógico válido.
+    // Forces a return to the last valid pedagogical state.
     changeState(_lastRitualState);
 }
 
-/** @section Utilitários de Diagnóstico e Controle */
+/** @section Diagnostics and Control Utilities */
 
 void GameController::resetRitualProgress()
 {
@@ -361,7 +372,7 @@ const char* GameController::getStateName(RobotState state)
 
 bool GameController::isRitualState(RobotState state)
 {
-    // Define o escopo das etapas de higienização ativa.
+    // Defines the scope of the active hygiene stages.
     return (
         state == RobotState::WET || state == RobotState::SOAP ||
         state == RobotState::SCRUB || state == RobotState::RINSE ||
@@ -376,7 +387,7 @@ RobotState GameController::getCurrentStateEnum() const
     return RobotState::BOOT;
 }
 
-/** @section Gerenciamento de Energia e Desligamento */
+/** @section Power and Shutdown Management */
 
 extern bool isSystemSleeping;
 
@@ -388,27 +399,27 @@ void GameController::shutdownSystem()
 
     Serial.println(F("[SYSTEM] Iniciando desligamento seguro..."));
 
-    // 1. Sinaliza parada imediata para tarefas assíncronas (Core 0/1).
+    // 1. Signals the async tasks (Core 0/1) to stop immediately.
     isSystemSleeping = true;
     delay(100);
 
-    // 2. Congela o processamento da FSM e motor orgânico imediatamente.
+    // 2. Freezes FSM and behavior engine processing right away.
     _currentState = nullptr;
     _behaviors.stop();
 
-    // 3. Comando de centralização (agendamento).
+    // 3. Centering command (scheduled).
     _motion.stopAllAnimations();
     _motion.centerAll();
 
-    // 4. Silêncio absoluto: Desliga o amplificador do hardware.
+    // 4. Absolute silence: turns off the hardware amplifier.
     _audio.hibernate();
 
-    // 5. Apaga e desliga o controlador OLED.
+    // 5. Clears and turns off the OLED controller.
     _display.prepareForSleep();
 
-    // 6. LOOP DE ESPERA ATIVA PARA MOTORES
-    // Como o loop() principal está travado por esta função, precisamos
-    // atualizar a física dos motores manualmente aqui para que eles se movam.
+    // 6. ACTIVE WAIT LOOP FOR THE MOTORS
+    // Since the main loop() is blocked by this function, we need to update
+    // the motor physics manually here so they can actually move.
     Serial.println(F("[SYSTEM] Centralizando motores..."));
     unsigned long startCenter = millis();
     unsigned long lastUpdate = startCenter;
@@ -419,11 +430,12 @@ void GameController::shutdownSystem()
         float dt = (now - lastUpdate) / 1000.0f;
         lastUpdate = now;
 
-        // Processa a cinemática dos servos manualmente
+        // Manually processes the servo kinematics
         _motion.update(dt);
-        delay(10); // Pequena pausa para manter a cadência
+        delay(10); // Small pause to keep the cadence
     }
 
-    // 7. Envia o sinal final para o módulo de bateria desligar tudo.
+    // 7. Sends the final signal to the battery module to power everything
+    // down.
     _power.requestSystemShutdown();
 }

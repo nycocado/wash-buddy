@@ -1,8 +1,8 @@
 #include "ExpressionEngine.h"
 
-// Referência externa para a instância global da biblioteca u8g2.
-// O motor de expressões utiliza esta instância para desenhar as formas
-// geométricas básicas que compõem os olhos.
+// External reference to the global u8g2 library instance.
+// The expression engine uses this instance to draw the basic geometric
+// shapes that make up the eyes.
 extern U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2;
 
 ExpressionEngine::ExpressionEngine() : _face(nullptr) {}
@@ -16,7 +16,7 @@ ExpressionEngine::~ExpressionEngine()
 }
 
 /**
- * @section Ciclo de Vida e Renderização
+ * @section Lifecycle and Rendering
  */
 
 void ExpressionEngine::begin(
@@ -25,21 +25,21 @@ void ExpressionEngine::begin(
     const ExpressionConfig& config
 )
 {
-    // A classe Face inicializa o u8g2 internamente e configura o buffer.
-    // O tamanho do olho define a escala de renderização no display.
+    // The Face class initializes u8g2 internally and sets up the buffer.
+    // The eye size defines the rendering scale on the display.
     _face = new Face(width, height, config.eyeSize);
 
-    // --- CONFIGURAÇÃO INICIAL (Behavior) ---
-    // Ativamos piscadas aleatórias, mas mantemos o olhar fixo inicialmente.
+    // --- INITIAL SETUP (behavior) ---
+    // We enable random blinking but keep the gaze fixed initially.
     _face->RandomBlink = true;
     _face->Blink.Timer.SetIntervalMillis(config.blinkInterval);
     _face->RandomLook = true;
     _face->RandomBehavior = false;
 
-    // Garante que o robô comece com uma expressão neutra
+    // Ensures the robot starts with a neutral expression
     _face->Expression.GoTo_Normal();
 
-    // Limpa variações residuais (piscadas parciais ou tremores)
+    // Clears any residual variations (partial blinks or twitches)
     _face->LeftEye.Variation1.Clear();
     _face->LeftEye.Variation2.Clear();
     _face->RightEye.Variation1.Clear();
@@ -50,16 +50,16 @@ void ExpressionEngine::update()
 {
     if (_face)
     {
-        // --- PROCESSAMENTO DE COMPORTAMENTOS ---
-        // Se o modo randômico estiver ativo, sorteia novas emoções.
+        // --- BEHAVIOR PROCESSING ---
+        // If random mode is active, rolls new emotions.
         if (_face->RandomBehavior)
             _face->Behavior.Update();
 
-        // Processa o movimento suave do olhar (LookAt ou RandomLook).
+        // Processes the smooth gaze movement (LookAt or RandomLook).
         if (_face->RandomLook)
             _face->Look.Update();
 
-        // Processa o temporizador de piscada automática.
+        // Processes the automatic blink timer.
         if (_face->RandomBlink)
             _face->Blink.Update();
     }
@@ -69,17 +69,17 @@ void ExpressionEngine::draw()
 {
     if (_face)
     {
-        // --- CÁLCULO DE POSICIONAMENTO ---
-        // Calcula o centro de cada olho baseado na distância interpupilar
-        // e no tamanho base definido na configuração.
+        // --- POSITIONING CALCULATION ---
+        // Computes the center of each eye based on the interpupillary
+        // distance and the base size defined in the configuration.
 
-        // Olho Esquerdo
+        // Left eye
         _face->LeftEye.CenterX =
             _face->CenterX - _face->EyeSize / 2 - _face->EyeInterDistance;
         _face->LeftEye.CenterY = _face->CenterY;
         _face->LeftEye.Draw();
 
-        // Olho Direito
+        // Right eye
         _face->RightEye.CenterX =
             _face->CenterX + _face->EyeSize / 2 + _face->EyeInterDistance;
         _face->RightEye.CenterY = _face->CenterY;
@@ -88,15 +88,15 @@ void ExpressionEngine::draw()
 }
 
 /**
- * @section Gestão de Expressões e Comportamento
+ * @section Expression and Behavior Management
  */
 
 void ExpressionEngine::setMood(eEmotions mood)
 {
     if (_face)
     {
-        // Altera o humor atual. A biblioteca processará a transição
-        // de forma suave no próximo ciclo de desenho.
+        // Changes the current mood. The library will process the
+        // transition smoothly on the next drawing cycle.
         _face->Behavior.GoToEmotion(mood);
     }
 }
@@ -105,15 +105,15 @@ void ExpressionEngine::setIdleMode(bool active)
 {
     if (_face)
     {
-        // Ativa comportamentos que dão "vida" ao robô quando ele não
-        // está realizando uma tarefa específica.
+        // Activates behaviors that give the robot "life" when it isn't
+        // performing a specific task.
         _face->RandomLook = active;
         _face->RandomBlink = active;
     }
 }
 
 /**
- * @section Controles Direcionais e Presets
+ * @section Directional Controls and Presets
  */
 
 void ExpressionEngine::blink()
@@ -126,7 +126,7 @@ void ExpressionEngine::lookAt(float x, float y)
 {
     if (_face)
     {
-        // Desativa o olhar aleatório para focar na coordenada pedida.
+        // Disables random look to focus on the requested coordinate.
         _face->RandomLook = false;
         _face->Look.LookAt(x, y);
     }

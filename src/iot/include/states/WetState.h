@@ -3,53 +3,56 @@
 
 /**
  * @class WetState
- * @brief Primeira etapa ativa do ritual: Molhar as mãos.
+ * @brief First active stage of the ritual: wetting the hands.
  *
- * Este estado é ativado quando a criança aproxima a tag da Torneira (Faucet)
- * enquanto o robô está em Idle. O objetivo é preparar as mãos para o sabão.
+ * This state is activated when the child brings the faucet tag close
+ * while the robot is in Idle. The goal is to prepare the hands for the
+ * soap.
  *
- * Feedback Visual: Efeito de chuva leve (Light Rain).
- * Feedback Físico: O robô executa movimentos de 'mergulho' simulando a
- * interação com a água.
+ * Visual feedback: light rain effect.
+ * Physical feedback: the robot performs "dipping" movements simulating
+ * interaction with the water.
  */
 class WetState : public State
 {
     public:
         /**
-         * @brief Ativa o efeito de chuva leve e inicia a sonorização de água.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Activates the light rain effect and starts the water
+         * sound.
+         * @param controller Pointer to the central game controller.
          */
         void enter(GameController* controller) override;
 
         /**
-         * @brief Gerencia o tempo de exposição à água e transiciona para
-         * espera.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Manages the time exposed to water and transitions to
+         * waiting.
+         * @param controller Pointer to the central game controller.
          */
         void update(GameController* controller) override;
 
         /**
-         * @brief Encerra as animações e efeitos de água.
-         * @param controller Ponteiro para o controlador central de jogo.
+         * @brief Ends the water animations and effects.
+         * @param controller Pointer to the central game controller.
          */
         void exit(GameController* controller) override;
 
         /**
-         * @brief Valida tags de torneira (repetir) ou sabão (avançar).
-         * @param controller Ponteiro para o controlador de jogo.
-         * @param uid Identificador da tag detectada.
+         * @brief Validates faucet (repeat) or soap (advance) tags.
+         * @param controller Pointer to the game controller.
+         * @param uid Identifier of the detected tag.
          */
         void handleRFID(GameController* controller, const String& uid) override;
 
         /**
-         * @brief Retorna o enum RobotState::WET.
-         * @return RobotState O estado de molhar as mãos.
+         * @brief Returns the RobotState::WET enum.
+         * @return RobotState The wetting-hands state.
          */
         RobotState getStateEnum() const override { return RobotState::WET; }
 
         /**
-         * @brief Retorna o tempo pedagógico configurado para molhar as mãos.
-         * @return unsigned long Tempo em milissegundos.
+         * @brief Returns the pedagogical time configured for wetting the
+         * hands.
+         * @return unsigned long Time in milliseconds.
          */
         unsigned long getTimeout() const override
         {

@@ -7,49 +7,52 @@
 #include "MotionController.h"
 
 /**
- * @section Testes de Matemática e Física (MotionController)
+ * @section Math and Physics Tests (MotionController)
  */
 
 void test_motion_easing_start(void)
 {
-    // Testa o início do movimento (0.0 progress) usando a função real da lib
+    // Tests the start of the movement (0.0 progress) using the lib's real
+    // function
     float result = MotionController::easeSmoothStep(0.0f, 100.0f, 0.0f);
     TEST_ASSERT_EQUAL_FLOAT(0.0f, result);
 }
 
 void test_motion_easing_mid(void)
 {
-    // Testa o meio do movimento (0.5 progress) usando a função real da lib
+    // Tests the middle of the movement (0.5 progress) using the lib's real
+    // function
     float result = MotionController::easeSmoothStep(0.0f, 100.0f, 0.5f);
     TEST_ASSERT_EQUAL_FLOAT(50.0f, result);
 }
 
 void test_motion_easing_end(void)
 {
-    // Testa o fim do movimento (1.0 progress) usando a função real da lib
+    // Tests the end of the movement (1.0 progress) using the lib's real
+    // function
     float result = MotionController::easeSmoothStep(0.0f, 100.0f, 1.0f);
     TEST_ASSERT_EQUAL_FLOAT(100.0f, result);
 }
 
 void test_motor_axis_clamping(void)
 {
-    // Testa se o MotorAxis respeita os limites físicos (clamping)
-    // Pino 13, Inicial 90, Min 20, Max 160
+    // Tests whether MotorAxis respects the physical limits (clamping)
+    // Pin 13, initial 90, min 20, max 160
     MotorAxis axis(13, 90, 20, 160);
 
-    // Caso 1: Alvo acima do máximo permitido
+    // Case 1: target above the allowed maximum
     axis.setTarget(200, 1.0f);
     TEST_ASSERT_EQUAL_FLOAT(160.0f, axis.targetAngle);
 
-    // Caso 2: Alvo abaixo do mínimo permitido
+    // Case 2: target below the allowed minimum
     axis.setTarget(0, 1.0f);
     TEST_ASSERT_EQUAL_FLOAT(20.0f, axis.targetAngle);
 }
 
 void test_motor_inversion_logic(void)
 {
-    // Testa se braços espelhados invertem o ângulo corretamente (180 - x)
-    // Pino 14, Inicial 90, Min 0, Max 180, Invertido = true
+    // Tests whether mirrored arms invert the angle correctly (180 - x)
+    // Pin 14, initial 90, min 0, max 180, inverted = true
     MotorAxis axis(14, 90, 0, 180, true);
     axis.currentAngle = 10.0f;
 
@@ -59,34 +62,34 @@ void test_motor_inversion_logic(void)
 
 void test_choreo_sequence_stepping(void)
 {
-    // Testa a progressão de passos de uma coreografia baseada em tempo
+    // Tests the time-based step progression of a choreography
     ChoreoSequence choreo;
     std::vector<ChoreoStep> steps = {
-        {45, 1.0f}, // Passo 0: 45 graus em 1s
-        {90, 2.0f}  // Passo 1: 90 graus em 2s
+        {45, 1.0f}, // Step 0: 45 degrees over 1s
+        {90, 2.0f}  // Step 1: 90 degrees over 2s
     };
     choreo.setFrames(steps);
-    choreo.play(0.0f, false); // Play sem delay e sem loop
+    choreo.play(0.0f, false); // Play with no delay and no loop
 
-    // Frame 0: O primeiro update deve sempre retornar o primeiro passo (45°)
+    // Frame 0: the first update must always return the first step (45°)
     const ChoreoStep* step = choreo.update(0.01f);
     TEST_ASSERT_NOT_NULL(step);
     TEST_ASSERT_EQUAL_INT(45, step->targetAngle);
 
-    // Frame intermediário: Passou 0.5s total (ainda executando passo 0)
-    // Não deve retornar novo comando (nullptr)
+    // Intermediate frame: 0.5s total elapsed (still running step 0)
+    // Should not return a new command (nullptr)
     step = choreo.update(0.5f);
     TEST_ASSERT_NULL(step);
 
-    // Frame de transição: Passou 1.1s total (estourou o 1.0s do passo 0)
-    // Deve retornar obrigatoriamente o comando do próximo passo (90°)
+    // Transition frame: 1.1s total elapsed (past step 0's 1.0s)
+    // Must return the next step's command (90°)
     step = choreo.update(0.6f);
     TEST_ASSERT_NOT_NULL(step);
     TEST_ASSERT_EQUAL_INT(90, step->targetAngle);
 }
 
 /**
- * @section Testes de Playlist e Áudio (AudioTracks)
+ * @section Playlist and Audio Tests (AudioTracks)
  */
 
 void test_playlist_wet_integrity(void)
@@ -133,12 +136,12 @@ void test_playlist_dry_integrity(void)
 }
 
 /**
- * @section Testes de Regras de Negócio (Pedagogia)
+ * @section Business Rule Tests (Pedagogy)
  */
 
 void test_pedagogical_timeouts(void)
 {
-    // Valida os tempos para cada etapa do ritual
+    // Validates the timing for each stage of the ritual
     TEST_ASSERT_EQUAL_UINT32(12000, GameConfig::WET_TIMEOUT);
     TEST_ASSERT_EQUAL_UINT32(12000, GameConfig::SOAP_TIMEOUT);
     TEST_ASSERT_EQUAL_UINT32(25000, GameConfig::SCRUB_TIMEOUT);
@@ -148,12 +151,12 @@ void test_pedagogical_timeouts(void)
 }
 
 /**
- * @section Configuração do Runner
+ * @section Runner Configuration
  */
 
 void setup()
 {
-    // Atraso para o Serial Monitor conectar
+    // Delay for the Serial Monitor to connect
     delay(2000);
 
     UNITY_BEGIN();
@@ -181,5 +184,5 @@ void setup()
 
 void loop()
 {
-    // Nada a fazer aqui
+    // Nothing to do here
 }

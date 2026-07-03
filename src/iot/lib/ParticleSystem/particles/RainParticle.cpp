@@ -1,7 +1,7 @@
 #include "RainParticle.h"
 #include <Arduino.h>
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 RainParticle::RainParticle(
     float startX,
@@ -14,12 +14,12 @@ RainParticle::RainParticle(
     x = startX;
     y = startY;
 
-    // Velocidade baseada na intensidade da chuva
+    // Speed based on the rain's intensity
     float minS = isHeavy ? _cfg.heavyMinSpeed : _cfg.lightMinSpeed;
     float maxS = isHeavy ? _cfg.heavyMaxSpeed : _cfg.lightMaxSpeed;
     speed = minS + (float)(random(0, 100) / 100.0f) * (maxS - minS);
 
-    // Comprimento da gota (motion blur simulado)
+    // Drop length (simulated motion blur)
     length = _cfg.minLength + (float)(random(0, 100) / 100.0f) *
                                   (_cfg.maxLength - _cfg.minLength);
 
@@ -27,7 +27,7 @@ RainParticle::RainParticle(
     splashTimer = 0.0f;
 }
 
-/** @section Física e Lógica */
+/** @section Physics and Logic */
 
 bool RainParticle::update(float deltaTime, int screenWidth, int screenHeight)
 {
@@ -35,7 +35,7 @@ bool RainParticle::update(float deltaTime, int screenWidth, int screenHeight)
     {
         y += speed * deltaTime;
 
-        // Detecção de colisão com o solo (base da tela)
+        // Collision detection with the ground (bottom of the screen)
         if (y >= screenHeight)
         {
             isSplashing = true;
@@ -45,13 +45,13 @@ bool RainParticle::update(float deltaTime, int screenWidth, int screenHeight)
     }
     else
     {
-        // Estado de dissipação (respingo)
+        // Dissipation state (splash)
         splashTimer += deltaTime;
         return (splashTimer < 0.15f);
     }
 }
 
-/** @section Renderização */
+/** @section Rendering */
 
 void RainParticle::draw(U8G2& display)
 {
@@ -61,14 +61,14 @@ void RainParticle::draw(U8G2& display)
     }
     else
     {
-        // Efeito de Splash radial simplificado
+        // Simplified radial splash effect
         int spread = (int)(splashTimer * 30.0f);
         int floorY = display.getHeight() - 1;
 
         display.drawPixel((int16_t)(x - spread - 1), floorY);
         display.drawPixel((int16_t)(x + spread + 1), floorY);
 
-        // Rebote central efêmero
+        // Ephemeral center bounce
         if (splashTimer < 0.08f)
         {
             display.drawPixel((int16_t)x, floorY - spread);

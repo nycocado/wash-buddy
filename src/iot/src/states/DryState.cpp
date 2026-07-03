@@ -30,25 +30,26 @@ static const std::vector<BehaviorVignette> DRY_POOL = {
         ChoreoAction(),
         ChoreoAction(),
         900
-    )};
+    )
+};
 
-/** @section Ciclo de Vida */
+/** @section Lifecycle */
 
 void DryState::enter(GameController* controller)
 {
-    // Lógica Pedagógica: Calcula quantas vezes a playlist cabe no tempo da
-    // etapa para evitar silêncio ou cortes abruptos.
+    // Pedagogical logic: computes how many times the playlist fits within
+    // the stage's time to avoid silence or abrupt cuts.
     uint8_t maxLoops = GameConfig::DRY_TIMEOUT / Playlists::DRY.totalDurationMs;
     if (maxLoops == 0)
         maxLoops = 1;
 
-    // Feedback sonoro sequencial de DRY (Vento)
+    // Sequential sound feedback for DRY (wind)
     controller->getAudio().playSequence(Playlists::DRY, maxLoops);
 
-    // Efeito visual atmosférico
+    // Atmospheric visual effect
     controller->getDisplay().setParticleEffect(EffectType::WIND);
 
-    // Executa a vibração de 'sopros' durante todo o ritual de secagem.
+    // Runs the "puffing" vibration throughout the drying ritual.
     controller->getBehaviors().setPool(DRY_POOL, 0, 0, true);
 }
 
@@ -57,18 +58,18 @@ void DryState::exit(GameController* controller)
     controller->getBehaviors().stop();
 }
 
-/** @section Atualização Lógica */
+/** @section Logic Update */
 
 void DryState::update(GameController* controller)
 {
     if (millis() - controller->getStateStartTime() > getTimeout())
     {
-        // Ritual completo com sucesso.
+        // Ritual successfully completed.
         controller->changeState(RobotState::SUCCESS);
     }
 }
 
-/** @section Tratamento de Eventos */
+/** @section Event Handling */
 
 void DryState::handleRFID(GameController* controller, const String& uid)
 {

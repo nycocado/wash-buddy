@@ -6,18 +6,18 @@
 #include <HardwareSerial.h>
 
 /**
- * @brief Configurações básicas de hardware e tempo do subsistema de áudio.
+ * @brief Basic hardware and timing settings for the audio subsystem.
  */
 struct AudioSettings
 {
-        uint8_t defaultVolume = 15; ///< Volume inicial ao ligar (0-30)
+        uint8_t defaultVolume = 15; ///< Initial volume on power-up (0-30)
         uint32_t updateIntervalMs =
-            100; ///< Intervalo entre leituras do potenciômetro
+            100; ///< Interval between potentiometer reads
 
         /**
-         * @brief Construtor da estrutura de configuração.
-         * @param vol Volume inicial desejado.
-         * @param interval Tempo em milissegundos entre atualizações de volume.
+         * @brief Constructor for the configuration structure.
+         * @param vol Desired initial volume.
+         * @param interval Time in milliseconds between volume updates.
          */
         AudioSettings(uint8_t vol = 15, uint32_t interval = 100)
             : defaultVolume(vol), updateIntervalMs(interval)
@@ -27,39 +27,40 @@ struct AudioSettings
 
 /**
  * @class AudioController
- * @brief Interface resiliente para o controle do DFPlayer Pro (DF1201S).
+ * @brief Resilient interface to control the DFPlayer Pro (DF1201S).
  *
- * Esta classe gerencia a comunicação serial com o módulo de áudio de forma
- * não-bloqueante, utilizando uma máquina de estados interna para garantir a
- * fluidez do sistema e a inicialização assíncrona do hardware.
+ * This class manages the serial communication with the audio module in a
+ * non-blocking way, using an internal state machine to ensure the system
+ * stays smooth and the hardware initializes asynchronously.
  */
 class AudioController
 {
     public:
         /**
          * @enum InitStatus
-         * @brief Representa os estágios do ciclo de vida da inicialização do
-         * hardware.
+         * @brief Represents the stages of the hardware's initialization
+         * lifecycle.
          */
         enum class InitStatus
         {
-            WAKING_UP,    ///< Aguardando estabilização elétrica do chip (1s)
-            CONNECTING,   ///< Tentativa de sincronização via comandos AT da
-                          ///< biblioteca
-            SETTING_MODE, ///< Configurando modo MUSIC e silenciando avisos de
-                          ///< voz
-            READY,        ///< Hardware online, configurado e pronto para uso
-            ERROR         ///< Falha persistente detectada na comunicação
+            WAKING_UP,    ///< Waiting for the chip's electrical
+                          ///< stabilization (1s)
+            CONNECTING,   ///< Attempting synchronization via the library's
+                          ///< AT commands
+            SETTING_MODE, ///< Configuring MUSIC mode and silencing voice
+                          ///< prompts
+            READY,        ///< Hardware online, configured, and ready to use
+            ERROR         ///< Persistent communication failure detected
         };
 
         /**
-         * @brief Construtor do AudioController via Injeção de Dependência.
+         * @brief AudioController constructor via dependency injection.
          *
-         * @param serial Referência para a HardwareSerial utilizada (Serial2).
-         * @param rxPin Pino de recepção do ESP32 conectado ao TX do player.
-         * @param txPin Pino de transmissão do ESP32 conectado ao RX do player.
-         * @param potPin Pino analógico (ADC) para o potenciômetro de volume.
-         * @param settings Estrutura com as definições iniciais de áudio.
+         * @param serial Reference to the HardwareSerial used (Serial2).
+         * @param rxPin ESP32 receive pin connected to the player's TX.
+         * @param txPin ESP32 transmit pin connected to the player's RX.
+         * @param potPin Analog pin (ADC) for the volume potentiometer.
+         * @param settings Structure with the initial audio settings.
          */
         AudioController(
             HardwareSerial& serial,
@@ -70,112 +71,106 @@ class AudioController
         );
 
         /**
-         * @brief Inicializa a porta serial e prepara o estado de boot.
-         * Esta função não bloqueia a execução esperando pelo hardware.
+         * @brief Initializes the serial port and prepares the boot state.
+         * This function does not block execution waiting for the
+         * hardware.
          */
         void init();
 
         /**
-         * @brief Processa a máquina de estados e atualiza o volume por
-         * hardware. Deve ser chamada continuamente, preferencialmente em task
-         * dedicada.
+         * @brief Processes the state machine and updates the hardware
+         * volume. Must be called continuously, ideally from a dedicated
+         * task.
          */
         void update();
 
         /**
-         * @brief Reproduz um arquivo de áudio pela estrutura AudioTrack.
+         * @brief Plays an audio file via its AudioTrack structure.
          */
         void playFile(const AudioTrack& track);
 
         /**
-         * @brief Reproduz uma playlist (sequência) de arquivos de áudio.
-         * @param maxLoops Número máximo de vezes que a playlist pode tocar (1 =
-         * toca apenas uma vez, sem loop).
+         * @brief Plays a playlist (sequence) of audio files.
+         * @param maxLoops Maximum number of times the playlist can play (1
+         * = plays once, no looping).
          */
         void playSequence(const AudioPlaylist& playlist, uint8_t maxLoops = 1);
 
         /**
-         * @brief Reproduz um arquivo em modo de repetição contínua (loop).
-         */
-        void playLoop(const AudioTrack& track);
-
-        /**
-         * @brief Interrompe a reprodução atual.
+         * @brief Stops the current playback.
          */
         void stop();
 
         /**
-         * @brief Define o nível de volume do hardware.
-         * @param volume Valor entre 0 (mudo) e 30 (máximo).
+         * @brief Sets the hardware's volume level.
+         * @param volume Value between 0 (mute) and 30 (max).
          */
         void setVolume(uint8_t volume);
 
         /**
-         * @brief Entra no modo de hibernação, desligando o amplificador.
+         * @brief Enters hibernation mode, turning off the amplifier.
          */
         void hibernate();
 
     private:
         /**
          * @enum AudioCommand
-         * @brief Comandos internos para evitar conflitos de thread.
+         * @brief Internal commands to avoid thread conflicts.
          */
         enum class AudioCommand
         {
             NONE,
             PLAY_FILE,
-            PLAY_LOOP,
             STOP,
             HIBERNATE
         };
 
-        DFRobot_DF1201S _df1201s; ///< Instância da biblioteca de baixo nível
-        HardwareSerial& _serial;  ///< Barramento serial utilizado
-        uint8_t _rxPin;           ///< Configuração física do pino RX
-        uint8_t _txPin;           ///< Configuração física do pino TX
-        uint8_t _potPin; ///< Configuração física do pino do potenciômetro
-        AudioSettings _settings; ///< Parâmetros de configuração ativa
+        DFRobot_DF1201S _df1201s; ///< Low-level library instance
+        HardwareSerial& _serial;  ///< Serial bus in use
+        uint8_t _rxPin;           ///< RX pin physical configuration
+        uint8_t _txPin;           ///< TX pin physical configuration
+        uint8_t _potPin;          ///< Potentiometer pin physical configuration
+        AudioSettings _settings;  ///< Active configuration parameters
 
         InitStatus _status =
-            InitStatus::WAKING_UP; ///< Estado atual da inicialização
-        uint8_t _currentVolume;    ///< Cache do volume atual
-        unsigned long _lastUpdate; ///< Timestamp da última leitura do ADC
+            InitStatus::WAKING_UP; ///< Current initialization state
+        uint8_t _currentVolume;    ///< Current volume cache
+        unsigned long _lastUpdate; ///< Timestamp of the last ADC read
         unsigned long
-            _lastAttemptTime; ///< Timestamp da última tentativa de conexão
-        unsigned long _bootTimestamp; ///< Timestamp do início do driver
+            _lastAttemptTime; ///< Timestamp of the last connection attempt
+        unsigned long _bootTimestamp; ///< Timestamp of the driver's start
 
-        uint16_t _pendingFile = 0; ///< Armazena track solicitada durante o boot
+        uint16_t _pendingFile = 0; ///< Stores the track requested during boot
         bool _hasPendingFile =
-            false; ///< Indica se há um comando aguardando prontidão
+            false; ///< Whether a command is waiting for readiness
 
         AudioCommand _nextCommand =
-            AudioCommand::NONE;   ///< Próximo comando a executar
-        uint16_t _commandArg = 0; ///< Argumento do comando (ex: index)
+            AudioCommand::NONE;   ///< Next command to execute
+        uint16_t _commandArg = 0; ///< Command argument (e.g. index)
 
         const AudioTrack* _sequenceTracks =
-            nullptr;                ///< Ponteiro para a sequência atual
-        uint8_t _sequenceCount = 0; ///< Tamanho da sequência
-        uint8_t _sequenceIndex = 0; ///< Índice da faixa atual tocando
-        uint8_t _sequenceMaxLoops =
-            1; ///< Limite máximo de reproduções da playlist
+            nullptr;                   ///< Pointer to the current sequence
+        uint8_t _sequenceCount = 0;    ///< Sequence size
+        uint8_t _sequenceIndex = 0;    ///< Index of the track currently playing
+        uint8_t _sequenceMaxLoops = 1; ///< Maximum playlist repetition limit
         uint8_t _sequenceCurrentLoop =
-            1; ///< Contador de execuções da playlist atual
+            1; ///< Counter of the playlist's current run
         unsigned long _lastSequenceCheck =
-            0; ///< Temporizador para checar isPlaying() sem travar
+            0; ///< Timer to check isPlaying() without blocking
         bool _wasPlayingLastCheck =
-            false; ///< Guarda o último estado para evitar trocar cedo demais
+            false; ///< Holds the last state to avoid switching too early
 
         unsigned long _lastCommandTime =
-            0; ///< Previne sobrecarga de comandos AT no hardware
+            0; ///< Prevents overloading the hardware with AT commands
 
         /**
-         * @brief Lê o potenciômetro e aplica o volume com filtragem de ruído.
+         * @brief Reads the potentiometer and applies the volume with noise
+         * filtering.
          */
         void processVolumePot();
 
         /**
-         * @brief Gerencia as transições de estado para uma inicialização
-         * segura.
+         * @brief Manages the state transitions for a safe initialization.
          */
         void handleInitialization();
 };

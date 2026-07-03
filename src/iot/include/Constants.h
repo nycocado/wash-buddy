@@ -4,223 +4,224 @@
 
 /**
  * @namespace Pins
- * @brief Definições físicas dos pinos de conexão do ESP32 aos periféricos.
+ * @brief Physical pin definitions connecting the ESP32 to its peripherals.
  *
- * Este namespace agrupa as constantes que definem quais pinos do ESP32 estão
- * conectados aos diferentes módulos de hardware do Wash-Buddy.
+ * This namespace groups the constants that define which ESP32 pins are
+ * connected to Wash-Buddy's different hardware modules.
  */
 namespace Pins
 {
     /**
-     * @brief Pinos para comunicação SPI com o Leitor RFID (MFRC522).
-     * O leitor RFID é usado para identificar os objetos (sabão, toalha, etc.)
+     * @brief Pins for SPI communication with the RFID reader (MFRC522).
+     * The RFID reader is used to identify the objects (soap, towel, etc.)
      * via tags.
      */
-    constexpr uint8_t SPI_SCK = 26;  ///< Pino de Clock (SCK)
-    constexpr uint8_t SPI_MISO = 33; ///< Pino Master In Slave Out (MISO)
-    constexpr uint8_t SPI_MOSI = 25; ///< Pino Master Out Slave In (MOSI)
-    constexpr uint8_t RFID_SDA = 27; ///< Pino de Seleção de Escravo (SS/SDA)
-    constexpr uint8_t RFID_RST = 14; ///< Pino de Reset do MFRC522
+    constexpr uint8_t SPI_SCK = 26;  ///< Clock pin (SCK)
+    constexpr uint8_t SPI_MISO = 33; ///< Master In Slave Out pin (MISO)
+    constexpr uint8_t SPI_MOSI = 25; ///< Master Out Slave In pin (MOSI)
+    constexpr uint8_t RFID_SDA = 27; ///< Slave select pin (SS/SDA)
+    constexpr uint8_t RFID_RST = 14; ///< MFRC522 reset pin
 
     /**
-     * @brief Pinos para comunicação I2C com o Display OLED (SH1106).
-     * O display é a principal interface visual, mostrando as expressões do
-     * robô.
+     * @brief Pins for I2C communication with the OLED display (SH1106).
+     * The display is the main visual interface, showing the robot's
+     * expressions.
      */
-    constexpr uint8_t OLED_SDA = 17; ///< Pino de Dados I2C
-    constexpr uint8_t OLED_SCL = 22; ///< Pino de Clock I2C
+    constexpr uint8_t OLED_SDA = 17; ///< I2C data pin
+    constexpr uint8_t OLED_SCL = 22; ///< I2C clock pin
 
     /**
-     * @brief Pinos PWM para controle dos Servomotores.
-     * Estes servos dão vida ao robô, movendo braços e cabeça para expressar
-     * emoções. Braços e cabeça utilizam timers de hardware do ESP32 para
-     * movimentos simultâneos e fluidos sem jitter.
+     * @brief PWM pins to control the servomotors.
+     * These servos give life to the robot, moving arms and head to express
+     * emotions. Arms and head use ESP32 hardware timers for simultaneous,
+     * jitter-free motion.
      */
-    constexpr uint8_t SERVO_ARM_L =
-        21; ///< Braço Esquerdo: Usado para acenar ou gesticular
-    constexpr uint8_t SERVO_ARM_R =
-        19; ///< Braço Direito: Usado para acenar ou gesticular
-    constexpr uint8_t SERVO_HEAD =
-        18; ///< Movimento da Cabeça: Permite olhar para os lados
+    constexpr uint8_t SERVO_ARM_L = 21; ///< Left arm: used to wave or gesture
+    constexpr uint8_t SERVO_ARM_R = 19; ///< Right arm: used to wave or gesture
+    constexpr uint8_t SERVO_HEAD = 18; ///< Head motion: allows looking sideways
 
-    // --- SENSORES E ENTRADAS ---
-    constexpr uint8_t POT_VOLUME = 34; ///< Potenciômetro analógico (ADC)
+    // --- SENSORS AND INPUTS ---
+    constexpr uint8_t POT_VOLUME = 34; ///< Analog potentiometer (ADC)
 
     /**
-     * @brief Botão de depuração e navegação forçada.
-     * @note Pressionar avança estados; Segurar ativa/desativa logs detalhados
+     * @brief Debug and forced-navigation button.
+     * @note Pressing advances states; holding toggles verbose logs
      */
     constexpr uint8_t BUTTON_DEBUG =
-        23; ///< Botão para navegação forçada entre estados
+        23; ///< Button for forced navigation between states
 
     /**
-     * @brief Pino de controle do MOSFET N-Channel.
-     * Habilita/Desabilita a alimentação principal dos Servomotores.
+     * @brief Control pin for the N-Channel MOSFET.
+     * Enables/disables the servomotors' main power supply.
      */
     constexpr uint8_t MOSFET_MOTORS = 13;
 
     /**
-     * @brief Pino de sinal para o módulo de bateria (Power-Off).
-     * Quando colocado em HIGH, sinaliza para o hardware cortar a energia.
+     * @brief Signal pin for the battery module (power-off).
+     * When set to HIGH, signals the hardware to cut the power.
      */
     constexpr uint8_t PIN_SHUTDOWN = 12;
 
     /**
-     * @brief Pinos para comunicação Serial com o DFPlayer Pro (DF1201S).
-     * @note Usando as portas TXD2/RXD2 naturais do ESP32 (GPIO 17 e 16).
+     * @brief Pins for Serial communication with the DFPlayer Pro (DF1201S).
+     * @note Using the ESP32's natural TXD2/RXD2 ports (GPIO 17 and 16).
      */
     constexpr uint8_t AUDIO_TX =
-        16; ///< Pino TX do ESP32 (conecta no RX do player)
+        16; ///< ESP32 TX pin (connects to the player's RX)
     constexpr uint8_t AUDIO_RX =
-        4; ///< Pino RX do ESP32 (conecta no TX do player)
+        4; ///< ESP32 RX pin (connects to the player's TX)
 
 } // namespace Pins
 
 /**
  * @namespace RFIDTags
- * @brief Identificadores únicos (UIDs) associados aos objetos físicos do
- * ritual.
+ * @brief Unique identifiers (UIDs) associated with the ritual's physical
+ * objects.
  *
- * Cada tag RFID está colada em um objeto real usado pela criança durante a
- * lavagem das mãos.
+ * Each RFID tag is glued onto a real object used by the child during
+ * hand-washing.
  */
 namespace RFIDTags
 {
     static constexpr const char* FAUCET =
-        "6C:D3:D6:D4"; ///< Representa a Torneira (início/fim do enxágue)
+        "6C:D3:D6:D4"; ///< Represents the faucet (start/end of rinsing)
     static constexpr const char* SOAP =
-        "AC:F6:D8:D4"; ///< Representa o Sabonete
+        "AC:F6:D8:D4"; ///< Represents the soap bar
     static constexpr const char* SCRUB =
-        "1C:D4:D8:D4"; ///< Representa a ação de esfregar as mãos
+        "1C:D4:D8:D4"; ///< Represents the scrubbing action
     static constexpr const char* TOWEL =
-        "9C:ED:D9:D4"; ///< Representa a Toalha (finalização)
+        "9C:ED:D9:D4"; ///< Represents the towel (finishing step)
 } // namespace RFIDTags
 
 /**
  * @namespace AudioConfig
- * @brief Parâmetros de calibração do sistema de som.
+ * @brief Calibration parameters for the sound system.
  */
 namespace AudioConfig
 {
-    constexpr uint8_t DEFAULT_VOLUME = 15; ///< Volume inicial (0-30)
+    constexpr uint8_t DEFAULT_VOLUME = 15; ///< Initial volume (0-30)
     constexpr uint32_t UPDATE_INTERVAL_MS =
-        300; ///< Cadência de leitura do potenciômetro
+        300; ///< Potentiometer reading cadence
 } // namespace AudioConfig
 
 #include "AudioTracks.h"
 
 /**
  * @namespace GameConfig
- * @brief Parâmetros lógicos e de temporização do ritual de lavagem de mãos.
+ * @brief Logic and timing parameters for the hand-washing ritual.
  *
- * Define os tempos de espera e duração de cada etapa pedagógica do processo.
+ * Defines the wait times and duration of each pedagogical stage of the
+ * process.
  */
 namespace GameConfig
 {
-    // Timeouts padrão e globais
+    // Default and global timeouts
     constexpr unsigned long STATE_TIMEOUT_DEFAULT =
-        15000; ///< Tempo limite geral para qualquer estado (15s)
+        15000; ///< General timeout for any state (15s)
     constexpr unsigned long WAITING_TIMEOUT_MS =
-        45000; ///< Tempo máximo que o robô espera pela próxima ação (45s)
+        45000; ///< Maximum time the robot waits for the next action (45s)
     constexpr unsigned long WAITING_LOOK_AROUND_MS =
-        5000; ///< Tempo até o robô começar a procurar com o olhar na espera
+        5000; ///< Time until the robot starts looking around while waiting
               ///< (5s)
     constexpr unsigned long WAITING_SAD_PHASE_MS =
-        15000; ///< Tempo até o robô mudar para humor triste na espera (15s)
+        15000; ///< Time until the robot switches to a sad mood while
+               ///< waiting (15s)
     constexpr unsigned long WAITING_REMINDER_INTERVAL_MS =
-        15000; ///< Intervalo entre lembretes visuais da próxima etapa (15s)
+        15000; ///< Interval between visual reminders of the next stage (15s)
     constexpr unsigned long ERROR_DISPLAY_MS =
-        4000; ///< Duração da tela de erro/atenção (4s)
+        4000; ///< Duration of the error/attention screen (4s)
     constexpr unsigned long BOOT_DELAY_MS =
-        8000; ///< 3.5s (Boot HW) + 3.6s (Áudio) + margem
+        8000; ///< 3.5s (HW boot) + 3.6s (audio) + margin
 
-    // Timeouts específicos por etapa do ritual (Pedagógicos - Decididos pelo
-    // educador)
+    // Stage-specific timeouts within the ritual (pedagogical - decided by
+    // the educator)
     /**
-     * @brief Tempo para a etapa de molhar as mãos.
-     * Uma preparação rápida para a aplicação do sabão.
+     * @brief Time allowed for the wetting-hands stage.
+     * A quick preparation before applying soap.
      */
     constexpr unsigned long WET_TIMEOUT = 12000;
 
     /**
-     * @brief Tempo para a aplicação de sabão.
-     * Período destinado a garantir que a criança pegou sabão suficiente.
+     * @brief Time allowed for applying soap.
+     * A period meant to ensure the child grabbed enough soap.
      */
     constexpr unsigned long SOAP_TIMEOUT = 12000;
 
     /**
-     * @brief Tempo para a etapa de esfregar as mãos.
-     * Baseado na recomendação da OMS/CDC de pelo menos 20 segundos para
-     * eliminar patógenos.
+     * @brief Time allowed for the hand-scrubbing stage.
+     * Based on the WHO/CDC recommendation of at least 20 seconds to
+     * eliminate pathogens.
      */
     constexpr unsigned long SCRUB_TIMEOUT = 25000;
 
     /**
-     * @brief Tempo para o enxágue final.
-     * Garante que todo o sabão e sujeira foram removidos.
+     * @brief Time allowed for the final rinse.
+     * Ensures all soap and dirt were removed.
      */
     constexpr unsigned long RINSE_TIMEOUT = 20000;
 
     /**
-     * @brief Tempo para a secagem das mãos.
-     * Etapa final importante para evitar a proliferação de bactérias em mãos
-     * úmidas.
+     * @brief Time allowed for drying the hands.
+     * An important final stage to avoid bacteria proliferating on damp
+     * hands.
      */
     constexpr unsigned long DRY_TIMEOUT = 25000;
 
     /**
-     * @brief Duração da comemoração final.
-     * Tempo estendido para a criança celebrar a vitória com o robô.
+     * @brief Duration of the final celebration.
+     * Extended time for the child to celebrate the victory with the robot.
      */
     constexpr unsigned long SUCCESS_DISPLAY_MS = 15000;
 
     /**
-     * @brief Tempo necessário segurando o botão para entrar/sair do modo Debug.
+     * @brief Time the button must be held to enter/exit debug mode.
      */
     constexpr unsigned long DEBUG_LONG_PRESS_MS = 1500;
 
     /**
-     * @brief Tempo mínimo de pressão para considerar um clique válido
-     * (Debounce). Evita que ruídos elétricos disparem múltiplos cliques.
+     * @brief Minimum press duration to be considered a valid click
+     * (debounce). Prevents electrical noise from triggering multiple
+     * clicks.
      */
     constexpr unsigned long DEBUG_DEBOUNCE_MS = 50;
 
     /**
-     * @brief Tempo segurando o botão antes de exibir o feedback visual de
-     * "HOLD...".
+     * @brief Time holding the button before showing the "HOLD..." visual
+     * feedback.
      */
     constexpr unsigned long DEBUG_HOLD_FEEDBACK_MS = 500;
 
     /**
-     * @brief Tempo que a mensagem "DEBUG OFF" permanece na tela antes de sumir.
+     * @brief Time the "DEBUG OFF" message stays on screen before it
+     * disappears.
      */
     constexpr unsigned long DEBUG_MSG_DURATION_MS = 2000;
 
-    // --- COMPORTAMENTO (IDLE & BEHAVIOR) ---
+    // --- BEHAVIOR (IDLE & BEHAVIOR) ---
     constexpr unsigned long IDLE_TIMEOUT_MS =
-        120000; ///< Tempo máximo no estado ocioso antes de dormir (2 minutos)
+        120000; ///< Maximum time in the idle state before sleeping (2 minutes)
     constexpr unsigned long IDLE_MIN_PAUSE_MS =
-        8000; ///< Pausa mínima entre ações
+        8000; ///< Minimum pause between actions
     constexpr unsigned long IDLE_MAX_PAUSE_MS =
-        15000; ///< Pausa máxima entre ações
+        15000; ///< Maximum pause between actions
     constexpr unsigned long IDLE_REMINDER_INTERVAL_MS =
-        30000; ///< Intervalo entre ícones
+        30000; ///< Interval between icons
     constexpr unsigned long IDLE_INITIAL_DELAY_MS =
-        5000; ///< Atraso inicial ao entrar no Idle
+        5000; ///< Initial delay when entering Idle
     constexpr unsigned long INSTRUCTION_DISPLAY_MS =
-        5000; ///< Tempo do ícone na tela
+        5000; ///< Time the icon stays on screen
 
 } // namespace GameConfig
 
 /**
  * @namespace HardwareConfig
- * @brief Configurações gerais de hardware e memória.
+ * @brief General hardware and memory settings.
  */
 namespace HardwareConfig
 {
     /**
-     * @brief Tamanho máximo (em bytes) do buffer para leitura e filas de UID do
-     * RFID.
+     * @brief Maximum size (in bytes) of the buffer used for RFID UID reads
+     * and queues.
      */
     constexpr uint8_t RFID_BUFFER_SIZE = 32;
 } // namespace HardwareConfig

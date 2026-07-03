@@ -4,20 +4,20 @@
 #include <Arduino.h>
 
 /**
- * @brief Configurações básicas para o comportamento da face/expressões.
+ * @brief Basic settings for the face/expression behavior.
  */
 struct ExpressionConfig
 {
-        int blinkInterval = 3500; ///< Intervalo médio entre piscadas (ms)
-        uint16_t eyeSize = 40;    ///< Tamanho base dos olhos em pixels
+        int blinkInterval = 3500; ///< Average interval between blinks (ms)
+        uint16_t eyeSize = 40;    ///< Base eye size in pixels
 };
 
 /**
  * @class ExpressionEngine
- * @brief Gerencia a renderização e o comportamento expressivo dos olhos.
+ * @brief Manages the rendering and expressive behavior of the eyes.
  *
- * Encapsula a lógica da biblioteca esp32-eyes, fornecendo uma interface
- * semântica para controle de emoções, direção do olhar e animações automáticas.
+ * Wraps the esp32-eyes library logic, providing a semantic interface to
+ * control emotions, gaze direction, and automatic animations.
  */
 class ExpressionEngine
 {
@@ -26,10 +26,10 @@ class ExpressionEngine
         ~ExpressionEngine();
 
         /**
-         * @brief Inicializa o motor de renderização de olhos.
-         * @param width Largura da tela em pixels.
-         * @param height Altura da tela em pixels.
-         * @param config Estrutura de configuração opcional.
+         * @brief Initializes the eye rendering engine.
+         * @param width Screen width in pixels.
+         * @param height Screen height in pixels.
+         * @param config Optional configuration structure.
          */
         void begin(
             uint16_t width,
@@ -37,41 +37,42 @@ class ExpressionEngine
             const ExpressionConfig& config = ExpressionConfig()
         );
 
-        /** @brief Atualiza os estados internos de animação e comportamentos. */
+        /** @brief Updates the internal animation and behavior states. */
         void update();
 
-        /** @brief Desenha os olhos no buffer atual da U8g2. */
+        /** @brief Draws the eyes into the current U8g2 buffer. */
         void draw();
 
         /**
-         * @brief Altera a emoção/expressão atual.
-         * @param mood Enum eEmotions (ex: Focused, Happy, Sad).
+         * @brief Changes the current emotion/expression.
+         * @param mood eEmotions enum (e.g. Focused, Happy, Sad).
          */
         void setMood(eEmotions mood);
 
         /**
-         * @brief Ativa/desativa comportamentos automáticos de idle.
-         * @param active Se true, o robô pisca e olha ao redor sozinho.
+         * @brief Enables/disables automatic idle behaviors.
+         * @param active If true, the robot blinks and looks around on its
+         * own.
          */
         void setIdleMode(bool active);
 
-        /** @brief Executa um ciclo de piscada manual imediato. */
+        /** @brief Runs an immediate manual blink cycle. */
         void blink();
 
         /**
-         * @brief Direciona o olhar para coordenadas normalizadas.
-         * @param x Posição horizontal (-1.0 a 1.0).
-         * @param y Posição vertical (-1.0 a 1.0).
+         * @brief Points the gaze toward normalized coordinates.
+         * @param x Horizontal position (-1.0 to 1.0).
+         * @param y Vertical position (-1.0 to 1.0).
          */
         void lookAt(float x, float y);
 
-        /** @brief Toca animação de confusão (olhar cético). */
+        /** @brief Plays the confused animation (skeptical look). */
         void playConfused();
 
-        /** @brief Toca animação de alegria (olhar brilhante). */
+        /** @brief Plays the happy animation (bright-eyed look). */
         void playHappy();
 
     private:
-        Face* _face;     ///< Ponteiro para a implementação física da face
-        bool _isVisible; ///< Flag de controle de renderização
+        Face* _face;     ///< Pointer to the face's physical implementation
+        bool _isVisible; ///< Rendering control flag
 };

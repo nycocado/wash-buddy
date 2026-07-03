@@ -1,7 +1,7 @@
 #include "RFIDReader.h"
 
 /**
- * @section Inicialização e Configuração
+ * @section Initialization and Setup
  */
 
 RFIDReader::RFIDReader(uint8_t sda, uint8_t rst)
@@ -18,7 +18,7 @@ void RFIDReader::init()
 }
 
 /**
- * @section Operação de Leitura
+ * @section Read Operation
  */
 
 bool RFIDReader::isCardPresent()
@@ -51,22 +51,4 @@ String RFIDReader::readCardUID()
     _mfrc522.PICC_HaltA();
     _mfrc522.PCD_StopCrypto1();
     return uid;
-}
-
-/**
- * @section Gerenciamento de Energia
- */
-
-void RFIDReader::prepareForSleep()
-{
-    _mfrc522.PCD_AntennaOff();
-    _mfrc522.PCD_SoftPowerDown();
-    Serial.println(F("[RFID] Em sleep."));
-}
-
-void RFIDReader::wakeUp()
-{
-    _mfrc522.PCD_SoftPowerUp();
-    _mfrc522.PCD_AntennaOn();
-    Serial.println(F("[RFID] Acordado."));
 }

@@ -5,45 +5,39 @@
 
 /**
  * @class RFIDReader
- * @brief Interface simplificada para o leitor MFRC522.
+ * @brief Simplified interface for the MFRC522 reader.
  *
- * Oferece métodos não-bloqueantes para detecção e identificação de tags
- * RFID no ritual de lavagem.
+ * Provides non-blocking methods to detect and identify RFID tags during
+ * the wash ritual.
  */
 class RFIDReader
 {
     public:
         /**
-         * @brief Construtor do leitor.
-         * @param sda Pino de seleção (SDA/SS).
-         * @param rst Pino de reset.
+         * @brief Reader constructor.
+         * @param sda Select pin (SDA/SS).
+         * @param rst Reset pin.
          */
         RFIDReader(uint8_t sda, uint8_t rst);
 
-        /** @brief Inicializa o hardware e liga a antena. */
+        /** @brief Initializes the hardware and turns on the antenna. */
         void init();
 
         /**
-         * @brief Verifica se existe uma nova tag próxima.
-         * @return True se um novo cartão foi detectado.
+         * @brief Checks whether a new tag is nearby.
+         * @return True if a new card was detected.
          */
         bool isCardPresent();
 
         /**
-         * @brief Realiza a leitura do identificador.
-         * @return String hexadecimal do UID ou vazia em caso de falha.
+         * @brief Reads the identifier.
+         * @return Hexadecimal UID string, or empty on failure.
          */
         String readCardUID();
 
-        /** @brief Desativa a antena e entra em modo economia. */
-        void prepareForSleep();
-
-        /** @brief Religando a antena para novas leituras. */
-        void wakeUp();
-
     private:
-        MFRC522 _mfrc522;         ///< Driver de baixo nível
-        uint8_t _sdaPin, _rstPin; ///< Pinos físicos
+        MFRC522 _mfrc522;         ///< Low-level driver
+        uint8_t _sdaPin, _rstPin; ///< Physical pins
         unsigned long _lastReadTime = 0;
 
         static constexpr unsigned long READ_DEBOUNCE_MS = 800;

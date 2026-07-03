@@ -3,54 +3,47 @@
 
 /**
  * @class IdleState
- * @brief Estado de espera ativa, onde o robô aguarda o início do ritual.
+ * @brief Active waiting state, where the robot waits for the ritual to
+ * begin.
  *
- * Neste estado, o robô demonstra "vida" através de movimentos aleatórios de
- * cabeça, acenos e expressões faciais. O objetivo é atrair a atenção da criança
- * e sinalizar que ele está pronto para começar. O ritual começa quando a tag da
- * torneira (Faucet) é detectada.
+ * In this state, the robot shows "life" through random head movements,
+ * waves, and facial expressions. The goal is to catch the child's
+ * attention and signal that it's ready to start. The ritual begins once
+ * the faucet tag is detected.
  */
 class IdleState : public State
 {
     public:
         /**
-         * @brief Configura o pool de comportamentos e ativa a vida orgânica do
-         * robô.
-         * @param controller Ponteiro para o controlador central.
+         * @brief Sets up the behavior pool and activates the robot's
+         * organic life.
+         * @param controller Pointer to the central controller.
          */
         void enter(GameController* controller) override;
 
         /**
-         * @brief Gerencia os timers de animações aleatórias e lembretes
-         * visuais.
-         * @param controller Ponteiro para o controlador central.
+         * @brief Manages the random animation timers and visual reminders.
+         * @param controller Pointer to the central controller.
          */
         void update(GameController* controller) override;
 
         /**
-         * @brief Limpa o pool de comportamentos ao sair do repouso.
-         * @param controller Ponteiro para o controlador central.
+         * @brief Clears the behavior pool when leaving the rest state.
+         * @param controller Pointer to the central controller.
          */
         void exit(GameController* controller) override;
 
         /**
-         * @brief Aguarda a tag da torneira para iniciar a jornada pedagógica.
-         * @param controller Ponteiro para o controlador central.
-         * @param uid Identificador único da tag detectada.
+         * @brief Waits for the faucet tag to start the pedagogical journey.
+         * @param controller Pointer to the central controller.
+         * @param uid Unique identifier of the detected tag.
          */
         void handleRFID(GameController* controller, const String& uid) override;
 
-        /** @brief Retorna RobotState::IDLE. */
+        /** @brief Returns RobotState::IDLE. */
         RobotState getStateEnum() const override { return RobotState::IDLE; }
 
     private:
-        unsigned long _idleNextActionTime =
-            0;                ///< Agendamento da próxima animação aleatória
-        int _lastAction = -1; ///< Histórico para evitar repetições excessivas
-        int _actionStreak = 0;      ///< Contador de ações repetidas
-        bool _wasAnimating = false; ///< Estado de animação no frame anterior
         unsigned long _lastReminderTime =
-            0; ///< Registro de quando a última instrução foi mostrada
-        bool _isPreparingReminder =
-            false; ///< Flag para o momento de contato visual
+            0; ///< Records when the last instruction was shown
 };
