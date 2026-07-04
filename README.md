@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="media/photos/final-version-01.png">
+<img src="media/photos/final-version-01.png" width="360">
 
 # Wash Buddy
 
@@ -67,16 +67,16 @@ A physical debug button bypasses all of this for testing: a long press (1.5s) to
 
 <table>
 <tr>
-<td width="50%"><img src="media/photos/power-01.png" width="100%"><br>Power layer — hand-wired connections to the charger and MOSFET isolation circuit</td>
-<td width="50%"><img src="media/photos/logic-01.png" width="100%"><br>Logic layer — ESP32-WROOM-32 and DFPlayer Pro</td>
+<td width="50%" valign="top"><img src="media/photos/power-01.png" width="100%"><br>Power layer — hand-wired connections to the charger and MOSFET isolation circuit</td>
+<td width="50%" valign="top"><img src="media/photos/logic-01.png" width="100%"><br>Logic layer — ESP32-WROOM-32 and DFPlayer Pro</td>
 </tr>
 <tr>
-<td width="50%"><img src="media/photos/power-02.png" width="100%"><br>Power layer — 1000 µF filter capacitors and MOSFET heatsink</td>
-<td width="50%"><img src="media/photos/logic-02.png" width="100%"><br>Logic layer — USB-C ports for ESP32 programming and DFPlayer Pro config</td>
+<td width="50%" valign="top"><img src="media/photos/power-02.png" width="100%"><br>Power layer — 1000 µF filter capacitors and MOSFET heatsink</td>
+<td width="50%" valign="top"><img src="media/photos/logic-02.png" width="100%"><br>Logic layer — USB-C ports for ESP32 programming and DFPlayer Pro config</td>
 </tr>
 <tr>
-<td width="50%"><img src="media/photos/power-03.png" width="100%"><br>Power layer, side view</td>
-<td width="50%"><img src="media/photos/logic-03.png" width="100%"><br>Logic layer, side view</td>
+<td width="50%" valign="top"><img src="media/photos/power-03.png" width="100%"><br>Power layer, side view</td>
+<td width="50%" valign="top"><img src="media/photos/logic-03.png" width="100%"><br>Logic layer, side view</td>
 </tr>
 <tr>
 <td colspan="2"><img src="media/photos/stack-01.png" width="100%"><br>The two-tier stack assembled — logic board on top, power board below</td>

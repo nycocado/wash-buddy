@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="media/photos/final-version-01.png">
+<img src="media/photos/final-version-01.png" width="360">
 
 # Wash Buddy
 
@@ -67,16 +67,16 @@ Um botão físico de debug ignora tudo isto para fins de teste: uma pressão lon
 
 <table>
 <tr>
-<td width="50%"><img src="media/photos/power-01.png" width="100%"><br>Camada de potência — ligações soldadas à mão do carregador e do circuito de isolamento por MOSFET</td>
-<td width="50%"><img src="media/photos/logic-01.png" width="100%"><br>Camada de lógica — ESP32-WROOM-32 e DFPlayer Pro</td>
+<td width="50%" valign="top"><img src="media/photos/power-01.png" width="100%"><br>Camada de potência — ligações soldadas à mão do carregador e do circuito de isolamento por MOSFET</td>
+<td width="50%" valign="top"><img src="media/photos/logic-01.png" width="100%"><br>Camada de lógica — ESP32-WROOM-32 e DFPlayer Pro</td>
 </tr>
 <tr>
-<td width="50%"><img src="media/photos/power-02.png" width="100%"><br>Camada de potência — capacitores de filtro de 1000 µF e dissipador do MOSFET</td>
-<td width="50%"><img src="media/photos/logic-02.png" width="100%"><br>Camada de lógica — portas USB-C para programação do ESP32 e configuração do DFPlayer Pro</td>
+<td width="50%" valign="top"><img src="media/photos/power-02.png" width="100%"><br>Camada de potência — capacitores de filtro de 1000 µF e dissipador do MOSFET</td>
+<td width="50%" valign="top"><img src="media/photos/logic-02.png" width="100%"><br>Camada de lógica — portas USB-C para programação do ESP32 e configuração do DFPlayer Pro</td>
 </tr>
 <tr>
-<td width="50%"><img src="media/photos/power-03.png" width="100%"><br>Camada de potência, vista lateral</td>
-<td width="50%"><img src="media/photos/logic-03.png" width="100%"><br>Camada de lógica, vista lateral</td>
+<td width="50%" valign="top"><img src="media/photos/power-03.png" width="100%"><br>Camada de potência, vista lateral</td>
+<td width="50%" valign="top"><img src="media/photos/logic-03.png" width="100%"><br>Camada de lógica, vista lateral</td>
 </tr>
 <tr>
 <td colspan="2"><img src="media/photos/stack-01.png" width="100%"><br>As duas camadas montadas — placa lógica em cima, placa de potência em baixo</td>
